@@ -2,7 +2,7 @@
 
 > [!IMPORTANT]
 > **Trọng tâm ôn thi NCA-GENL ở Module 5 (Thuộc Domain "Experimentation - 22%" & "Data Analysis - 14%"):**
-> Nắm vững **Quy trình 6 bước lựa chọn Foundation Model**; bảng so sánh **SLM (Small Language Model) vs. LLM (Large Language Model)**; cấu trúc chuẩn của một **Model Card**; làm chủ **Ma trận Nhầm lẫn (Confusion Matrix: TP, TN, FP, FN)** và khi nào ưu tiên **Precision vs. Recall vs. F1-Score**; phân biệt chính xác 3 độ đo ngôn ngữ vàng (**BLEU** cho Dịch máy, **ROUGE** cho Tóm tắt, **Cosine Similarity** cho Tìm kiếm vector/RAG); và hai phương pháp kiểm thử **k-Fold Cross-Validation** vs. **A/B Testing**.
+> Nắm vững **Quy trình 6 bước lựa chọn Foundation Model**; bảng so sánh **SLM vs. LLM** và **Open-Weights vs. Proprietary Models**; các chỉ số hiệu năng suy luận thực tế (**TTFT, ITL/TPOT, Throughput**); cấu trúc chuẩn của một **Model Card** & các bộ **Benchmark chuẩn (MMLU, HumanEval, GSM8K, TruthfulQA)**; làm chủ **Ma trận Nhầm lẫn (Confusion Matrix: TP, TN, FP, FN)**, khi nào ưu tiên **Precision vs. Recall vs. F1-Score vs. ROC-AUC**, các độ đo Hồi quy (**MAE, MSE, RMSE, $R^2$**); phân biệt chính xác các độ đo ngôn ngữ vàng (**BLEU** cho Dịch máy, **ROUGE** cho Tóm tắt, **BERTScore**, **Cosine Similarity** cho RAG, **RAG Triad**); và các phương pháp kiểm thử **k-Fold Cross-Validation**, **A/B Testing**, **Canary Deployment**.
 
 ---
 
@@ -12,9 +12,9 @@ Khi đứng trước hàng trăm nghìn mô hình trên Hugging Face hay các AP
 
 ```mermaid
 flowchart LR
-    S1["1. Define Need<br/>Xác định rõ bài toán<br/>(Tóm tắt, Dịch, Code, Chat?)"]
-    S2["2. Shortlist Models<br/>Lọc ra 2-4 ứng viên sáng giá<br/>(Open-source vs Proprietary)"]
-    S3["3. Compare Specs<br/>Đọc Model Card:<br/>Tham số, VRAM, License, Safety"]
+    S1["1. Define Need<br/>Xác định rõ bài toán,<br/>SLA độ trễ & Ngân sách"]
+    S2["2. Shortlist Models<br/>Lọc ra 2-4 ứng viên sáng giá<br/>(Open-weights vs Proprietary)"]
+    S3["3. Compare Specs<br/>Đọc Model Card:<br/>Tham số, VRAM, License, Context"]
     S4["4. Evaluate Metrics<br/>Đo lường bằng Metric chuẩn:<br/>BLEU, ROUGE, F1, Cosine Sim"]
     S5["5. Run Tests<br/>Kiểm thử dữ liệu thực tế:<br/>Cross-Validation / A/B Test"]
     S6["6. Select Best<br/>Chọn mô hình tối ưu:<br/>Hiệu năng + Chi phí + Độ ổn định"]
@@ -23,142 +23,214 @@ flowchart LR
 ```
 
 ### Chi tiết từng bước:
-1. **Define Need (Xác định nhu cầu nghiệp vụ):** Làm rõ bài toán cốt lõi cần giải quyết (Sinh văn bản, tóm tắt tài liệu, viết code, sinh ảnh hay dịch thuật), yêu cầu độ trễ tối đa bao nhiêu mili-giây và ngân sách bao nhiêu.
-2. **Shortlist Model (Lập danh sách rút gọn):** Chọn ra từ **2 đến 4 mô hình ứng viên** sáng giá dựa trên uy tín cộng đồng, tài liệu hỗ trợ và hình thức cấp phép (Mã nguồn mở tự host như LLaMA/Mistral hay Độc quyền gọi qua API như GPT-4).
-3. **Compare Specs (So sánh thông số kỹ thuật):** Đọc kỹ **Model Card** để đối chiếu số lượng tham số, chi phí vận hành, yêu cầu phần cứng GPU (VRAM), độ an toàn và rủi ro bản quyền thương mại.
-4. **Evaluate Model (Đánh giá bằng độ đo kỹ thuật):** Chấm điểm tự động bằng các bộ chỉ số chuyên dụng tương ứng với từng bài toán (**BLEU** cho dịch thuật, **ROUGE** cho tóm tắt, **Cosine Similarity** cho tìm kiếm ngữ nghĩa, **F1-Score** cho phân loại).
-5. **Run Tests (Thực nghiệm kiểm thử):** Chạy thử nghiệm trên chính tập dữ liệu thực tế của doanh nghiệp bằng **Cross-validation** (khi ít dữ liệu) hoặc **A/B Testing** (trên môi trường Production).
-6. **Select Best (Chọn mô hình tối ưu nhất):** Ra quyết định dựa trên phương trình cân bằng:
-   $$\text{Giá trị Tối ưu} = \text{Hiệu năng (Performance)} + \text{Chi phí (Cost)} + \text{Độ ổn định (Reliability)} + \text{Tính khả thi Triển khai}$$
+1. **Define Need (Xác định nhu cầu nghiệp vụ & Ràng buộc kỹ thuật):**
+   * Làm rõ bài toán cốt lõi cần giải quyết (Sinh văn bản, tóm tắt tài liệu, viết code, trích xuất thực thể, sinh ảnh hay dịch thuật).
+   * Xác định rõ ràng buộc vận hành (**Non-functional requirements**): Yêu cầu độ trễ tối đa bao nhiêu mili-giây (**SLA Latency**), lượng truy cập đồng thời (Concurrency), yêu cầu bảo mật dữ liệu (có được gửi ra Cloud ngoài hay bắt buộc chạy On-premise), và ngân sách phần cứng/API.
+2. **Shortlist Model (Lập danh sách rút gọn):**
+   * Chọn ra từ **2 đến 4 mô hình ứng viên** sáng giá dựa trên bảng xếp hạng cộng đồng, tài liệu hỗ trợ và hình thức phân phối (**Open-Source / Open-Weights** tự host như *LLaMA-3, Mistral, NVIDIA Nemotron* hay **Proprietary / Closed-Source** gọi qua API như *GPT-4o, Claude 3.5*).
+3. **Compare Specs (So sánh thông số kỹ thuật qua Model Card):**
+   * Đọc kỹ **Model Card** để đối chiếu số lượng tham số, độ dài cửa sổ ngữ cảnh (**Context Window**), yêu cầu dung lượng bộ nhớ GPU (**VRAM**), ngôn ngữ hỗ trợ và đặc biệt là **Giấy phép bản quyền thương mại (License: Apache 2.0, MIT hay Non-commercial CC-BY-NC)**.
+4. **Evaluate Model (Đánh giá bằng độ đo kỹ thuật):**
+   * Chấm điểm tự động bằng các bộ chỉ số chuyên dụng tương ứng với từng bài toán (**BLEU** cho dịch thuật, **ROUGE** cho tóm tắt, **Cosine Similarity** cho tìm kiếm ngữ nghĩa, **F1-Score / ROC-AUC** cho phân loại, **Perplexity** cho mô hình ngôn ngữ).
+5. **Run Tests (Thực nghiệm kiểm thử trên dữ liệu thật):**
+   * Chạy thử nghiệm trên chính tập dữ liệu thực tế của doanh nghiệp (Golden Dataset) bằng **k-Fold Cross-Validation** (khi ít dữ liệu) hoặc **A/B Testing / Canary Rollout** (trên môi trường Production).
+6. **Select Best (Chọn mô hình tối ưu nhất - The Golden Trade-off):**
+   * Ra quyết định dựa trên phương trình cân bằng đa mục tiêu (chứ không chỉ chọn mô hình điểm cao nhất mà quá đắt/quá chậm):
+     $$\text{Giá trị Tối ưu} = \text{Chất lượng (Accuracy)} + \text{Tốc độ (Latency/Throughput)} + \text{Chi phí (TCO)} + \text{Độ tin cậy \& Bảo mật}$$
 
 ---
 
-## 2. So sánh chuyên sâu: Small Language Model (SLM) vs. Large Language Model (LLM)
+## 2. So sánh chuyên sâu: SLM vs. LLM, Open-Weights vs. Proprietary & Các Chỉ số Tốc độ Suy luận
 
+### 2.1. Small Language Model (SLM) vs. Large Language Model (LLM)
 > [!TIP]
-> **Góc nhìn Developer:** Không phải bài toán nào cũng vác "đại bác" LLM 70B/400B ra bắn! Nếu bạn chỉ cần phân loại intent đơn giản hoặc chạy offline trên điện thoại/thiết bị IoT, một chiếc **SLM** nhỏ gọn sẽ rẻ hơn hàng chục lần và phản hồi trong chớp mắt.
+> **Góc nhìn Developer:** Không phải bài toán nào cũng vác "đại bác" LLM 70B/405B ra bắn! Nếu bạn chỉ cần phân loại ý định (Intent classification), trích xuất JSON đơn giản, kiểm duyệt nội dung hoặc chạy offline trên điện thoại/thiết bị IoT/xe tự hành, một chiếc **SLM** nhỏ gọn sẽ rẻ hơn hàng chục lần và phản hồi trong vài mili-giây.
 
 ```mermaid
 flowchart TD
-    subgraph SLM_Box["Small Language Model (SLM: <300M - ~8B params)"]
+    subgraph SLM_Box["Small Language Model (SLM: <100M - ~8B params)"]
         direction LR
-        SLM_Icon["📱 Chạy trên Edge / Laptop / 1 GPU nhỏ<br/>⚡ Độ trễ cực thấp (Low Latency)<br/>🚀 Thông lượng cực cao (High Throughput)<br/>🎯 Chuyên biệt hóa cho 1 tác vụ hẹp (Task-specific)"]
+        SLM_Icon["📱 Chạy trên Edge / Laptop / 1 GPU nhỏ<br/>⚡ Độ trễ cực thấp (Low Latency: vài ms)<br/>🚀 Thông lượng cực cao (High Throughput)<br/>🎯 Chuyên biệt hóa cho 1 tác vụ hẹp (Task-specific)<br/>🔒 Bảo mật dữ liệu cục bộ trên thiết bị (On-device Privacy)"]
     end
 
     subgraph LLM_Box["Large Language Model (LLM: 10B - Hàng trăm tỷ params)"]
         direction LR
-        LLM_Icon["🖥️ Đòi hỏi cụm Multi-GPU (A100/H100)<br/>🐢 Độ trễ cao hơn, tốn nhiều VRAM<br/>🧠 Đa năng, suy luận logic phức tạp (Multi-task Reasoning)<br/>💰 Chi phí hạ tầng & vận hành đắt đỏ"]
+        LLM_Icon["🖥️ Đòi hỏi cụm Multi-GPU cao cấp (A100/H100/B200)<br/>🐢 Độ trễ cao hơn, tốn hàng trăm GB VRAM<br/>🧠 Đa năng, suy luận logic đa bước phức tạp (Complex Reasoning)<br/>💰 Chi phí hạ tầng & điện năng vận hành đắt đỏ"]
     end
 ```
 
-### Bảng đối chiếu chi tiết SLM vs. LLM (Rất hay ra thi!)
 | Tiêu chí | Small Language Model (SLM) | Large Language Model (LLM) |
 | :--- | :--- | :--- |
-| **Quy mô tham số (Parameters)** | Nhỏ: Dưới 300 triệu đến vài tỷ tham số (VD: *DistilBERT ~66M, Phi-3 3.8B, LLaMA-3 8B*). | Khổng lồ: Từ 10 tỷ đến hàng trăm/nghìn tỷ tham số (VD: *LLaMA-3 70B/405B, GPT-4, Claude 3.5*). |
-| **Độ trễ (Latency)** | **Rất thấp**, phản hồi gần như tức thì (real-time). | **Cao hơn đáng kể** do khối lượng phép nhân ma trận đồ sộ. |
-| **Thông lượng (Throughput)** | **Rất cao** (xử lý được nhiều token/giây trên cùng một phần cứng). | **Thấp hơn** (thường phải chia nhỏ mô hình qua nhiều GPU). |
-| **Yêu cầu phần cứng** | Chạy mượt trên CPU, thiết bị biên (**Edge, Mobile, IoT**) hoặc 1 GPU phổ thông. | Đòi hỏi cụm máy chủ nhiều GPU cao cấp (**A100, H100**) với dung lượng VRAM cực lớn. |
-| **Tính đa năng (Versatility)** | Thường chuyên biệt hóa cho **một tác vụ hẹp cụ thể (Task-specific)** sau khi fine-tune. | Giải quyết **đa tác vụ (General-purpose)**, suy luận logic phức tạp và làm theo hướng dẫn mở xuất sắc. |
-| **Chi phí vận hành (Cost)** | Rẻ cho từng tác vụ đơn lẻ (nhưng có thể phức tạp nếu phải quản lý hàng chục SLM khác nhau). | Chi phí duy trì cụm server suy luận rất đắt đỏ, nhưng 1 mô hình phục vụ được nhiều phòng ban. |
+| **Quy mô tham số (Parameters)** | Nhỏ: Dưới 100 triệu đến ~8 tỷ tham số (VD: *BERT ~110M, DistilBERT ~66M, Phi-3 Mini 3.8B, Mistral 7B, LLaMA-3 8B, Nemotron-Mini 4B*). | Khổng lồ: Từ 13 tỷ đến hàng trăm/nghìn tỷ tham số (VD: *LLaMA-3 70B/405B, Nemotron-4 340B, GPT-4, Claude 3.5*). |
+| **Độ trễ (Latency)** | **Rất thấp**, phản hồi tức thì (real-time, lý tưởng cho Voice Assistant, Game NPC, Autocomplete). | **Cao hơn đáng kể** do khối lượng phép nhân ma trận đồ sộ qua hàng chục tầng. |
+| **Thông lượng (Throughput)** | **Rất cao** (xử lý hàng nghìn tokens/giây trên cùng một phần cứng). | **Thấp hơn** (thường phải chia nhỏ mô hình qua nhiều GPU bằng Tensor Parallelism). |
+| **Yêu cầu phần cứng** | Chạy mượt trên CPU, NPU, thiết bị biên (**Edge, Mobile, IoT, Jetson**) hoặc 1 GPU phổ thông. | Đòi hỏi cụm máy chủ nhiều GPU Data Center (**A100, H100, B200**) với dung lượng VRAM cực lớn. |
+| **Tính đa năng (Versatility)** | Thường chuyên biệt hóa cho **một tác vụ hẹp cụ thể (Task-specific)** sau khi fine-tune hoặc chưng cất (Distillation). | Giải quyết **đa tác vụ (General-purpose)**, suy luận logic phức tạp, Zero-shot và Agentic workflows xuất sắc. |
+| **Chi phí vận hành (Cost)** | Rất rẻ cho từng tác vụ đơn lẻ (nhưng cần kiến trúc Model Router nếu quản lý nhiều SLM khác nhau). | Chi phí duy trì cụm server suy luận rất đắt đỏ, nhưng 1 mô hình trung tâm phục vụ được nhiều phòng ban. |
+
+### 2.2. Mô hình Nguồn mở / Trọng số mở (Open-Weights) vs. Mô hình Độc quyền (Proprietary API)
+| Tiêu chí | Open-Weights Models (LLaMA-3, Mistral, DeepSeek, Nemotron) | Proprietary / Closed API Models (GPT-4o, Claude 3.5, Gemini Pro) |
+| :--- | :--- | :--- |
+| **Quyền kiểm soát & Bảo mật dữ liệu** | **Tuyệt đối (100%):** Tự tải trọng số về triển khai trong nội bộ (On-prem / VPC), dữ liệu không bao giờ rời khỏi công ty. | Dữ liệu phải gửi qua Internet tới máy chủ của nhà cung cấp bên thứ ba (phụ thuộc cam kết Zero Data Retention của hãng). |
+| **Khả năng tùy biến sâu** | Cho phép can thiệp toàn diện: **Full Fine-Tuning, LoRA/QLoRA, Pruning, Quantization (`FP8`/`INT4`)**, sửa kiến trúc. | Bị giới hạn ở Prompt Engineering, RAG hoặc chỉ Fine-tune hộp đen qua giao diện web của nhà cung cấp. |
+| **Chi phí theo quy mô** | Tốn chi phí dựng server GPU ban đầu, nhưng **rẻ hơn rất nhiều khi lưu lượng request lớn và ổn định 24/7**. | Không tốn phí hạ tầng ban đầu (trả tiền theo mỗi 1 triệu tokens Input/Output), nhưng **rất đắt đỏ khi quy mô người dùng tăng vọt**. |
+
+### 2.3. Ba Chỉ số Đo lường Hiệu năng Suy luận LLM trên Production (Inference Latency Metrics)
+Khi triển khai LLM (với TensorRT-LLM / Triton / NIM), đề thi thường hỏi về 3 chỉ số đo tốc độ:
+1. **TTFT (Time To First Token – Thời gian sinh ra token đầu tiên):**
+   * Khoảng thời gian từ lúc User bấm gửi Prompt cho đến khi chữ đầu tiên xuất hiện trên màn hình (Pha **Prefill** — xử lý song song toàn bộ Prompt đầu vào để tạo KV Cache).
+   * *Bản chất phần cứng:* Phụ thuộc vào **năng lực tính toán ma trận của GPU (Compute-bound)** và độ dài của Input Prompt.
+2. **ITL (Inter-Token Latency) / TPOT (Time Per Output Token – Thời gian giữa hai token liên tiếp):**
+   * Tốc độ nhả từng chữ tiếp theo sau khi chữ đầu tiên đã hiện ra (Pha **Decode** tự hồi quy). Để người dùng đọc mượt hơn tốc độ mắt người, TPOT cần đạt khoảng $10 - 30\text{ ms/token}$.
+   * *Bản chất phần cứng:* Phụ thuộc vào **băng thông bộ nhớ VRAM (Memory-bandwidth bound)** vì mỗi lần sinh 1 token mới lại phải đọc toàn bộ trọng số mô hình và KV Cache từ HBM lên nhân tính toán!
+3. **Throughput (Thông lượng tổng thể – Tokens/second hoặc Requests/second):**
+   * Tổng số lượng token mà máy chủ phục vụ được cho **tất cả người dùng đồng thời** trong 1 giây (Tối ưu hóa bằng *In-flight Batching / Dynamic Batching*).
 
 ---
 
-## 3. Khái niệm Model Card (Hồ sơ Lý lịch Mô hình)
+## 3. Khái niệm Model Card & Các Bộ Benchmark Đánh giá LLM Chuẩn Quốc tế
 
-* **Model Card là gì?** Là tài liệu tiêu chuẩn kỹ thuật (thường chính là file `README.md` đi kèm mỗi repo mô hình trên **Hugging Face** hoặc **NVIDIA NGC**) cung cấp thông tin minh bạch, toàn diện và có thể kiểm chứng về mô hình AI đó.
-* **6 mục bắt buộc phải có trong một Model Card tiêu chuẩn:**
-  1. **Model Overview:** Tên mô hình, phiên bản, tổ chức phát triển, loại kiến trúc nơ-ron nền tảng và giấy phép bản quyền (License: Apache 2.0, MIT, hay Non-commercial).
-  2. **Intended Use (Mục đích sử dụng):** Các bài toán được khuyến nghị sử dụng và các trường hợp **nghiêm cấm/không phù hợp (Out-of-scope / Misuse)** (VD: không dùng để chẩn đoán y khoa tự động).
-  3. **Training Data:** Nguồn gốc dữ liệu huấn luyện, kích thước kho ngữ liệu (bao nhiêu tỷ token), ngôn ngữ hỗ trợ và mốc thời gian ngắt dữ liệu (Knowledge Cutoff).
-  4. **Model Architecture:** Số lượng tầng (layers), kích thước chiều ẩn (hidden dimensions), số lượng attention heads, độ dài cửa sổ ngữ cảnh (Context Window).
-  5. **Performance Metrics:** Bảng điểm đánh giá thực tế trên các bộ benchmark chuẩn (Accuracy, F1-score, MMLU, HumanEval, BLEU, ROUGE...).
-  6. **Limitations & Bias (Hạn chế & Thiên vị):** Các điểm yếu đã biết, nguy cơ sinh ảo giác (hallucination) và các rủi ro thiên vị văn hóa/giới tính trong dữ liệu.
+### 3.1. Model Card (Hồ sơ Lý lịch Mô hình)
+* **Model Card là gì?** Là tài liệu tiêu chuẩn kỹ thuật (do Google đề xuất và trở thành chuẩn bắt buộc trên **Hugging Face** cũng như **NVIDIA NGC Catalog**) đi kèm mỗi mô hình AI nhằm cung cấp thông tin minh bạch, toàn diện và có thể kiểm chứng về năng lực cũng như giới hạn của mô hình đó.
+* **6 mục bắt buộc phải có trong một Model Card tiêu chuẩn (Cần nhớ kỹ cho kỳ thi):**
+  1. **Model Overview (Tổng quan mô hình):** Tên mô hình, phiên bản, tổ chức phát triển, ngày phát hành, loại kiến trúc nền tảng (ví dụ: *Transformer Decoder-only*) và **Giấy phép bản quyền (License: Apache 2.0, MIT, Llama Community License hay Non-commercial)**.
+  2. **Intended Use & Out-of-Scope Use (Mục đích sử dụng & Trường hợp cấm):** Các bài toán được thiết kế để sử dụng (ví dụ: trợ lý tóm tắt văn bản tiếng Anh) và các trường hợp **nghiêm cấm/ngoài phạm vi (Out-of-scope / Misuse)** (ví dụ: không được dùng để kê đơn thuốc y khoa tự động hay tư vấn pháp lý sinh tử).
+  3. **Training Data (Dữ liệu huấn luyện):** Nguồn gốc dữ liệu huấn luyện, phương pháp lọc/làm sạch, kích thước kho ngữ liệu (bao nhiêu nghìn tỷ token), phân bố ngôn ngữ và **Mốc thời gian ngắt tri thức (Knowledge Cutoff)**.
+  4. **Model Architecture & Compute Requirements (Kiến trúc & Yêu cầu phần cứng):** Số lượng tham số, số tầng (layers), số đầu chú ý (attention heads), độ dài cửa sổ ngữ cảnh (**Context Window**), định dạng số học (`BF16`/`FP8`) và lượng VRAM tối thiểu để chạy.
+  5. **Evaluation & Performance Metrics (Kết quả đánh giá chuẩn):** Bảng điểm định lượng thực tế trên các bộ benchmark công khai (MMLU, HumanEval, GSM8K, BLEU, ROUGE, F1-score...).
+  6. **Limitations, Ethical Considerations & Bias (Hạn chế, Đạo đức & Thiên vị):** Các điểm yếu đã biết, tỷ lệ sinh ảo giác (hallucination), các rủi ro thiên vị văn hóa/giới tính/chủng tộc và khuyến nghị đặt rào chắn an toàn (Guardrails).
+
+### 3.2. Các Bộ Benchmark Tiêu chuẩn để So sánh các LLM (Hay xuất hiện trong Model Card)
+| Tên Bộ Benchmark | Đo lường năng lực gì của LLM? | Ví dụ nội dung bài thi của Benchmark |
+| :--- | :--- | :--- |
+| **1. MMLU (Massive Multitask Language Understanding)** | **Kiến thức tổng quát & Học thuật đa lĩnh vực:** Bộ 57 môn thi trắc nghiệm từ cấp 3 đến đại học/chuyên gia (Toán, Lý, Hóa, Y sinh, Luật, Lịch sử, Kinh tế). | Các câu hỏi trắc nghiệm 4 lựa chọn A/B/C/D trải rộng mọi ngành khoa học. |
+| **2. HumanEval & MBPP** | **Năng lực Lập trình & Sinh mã nguồn (Coding):** Khả năng viết hàm Python từ chuỗi mô tả Docstring và vượt qua các Unit Tests tự động (chỉ số `pass@1`). | Cho đề bài thuật toán và kiểm tra xem code AI sinh ra chạy có đúng 100% test cases không. |
+| **3. GSM8K & MATH** | **Suy luận Toán học đa bước (Mathematical Reasoning):** Giải các bài toán đố cấp 2 (GSM8K - 8.500 bài) và toán thi Olympic (MATH). | Bài toán đố đòi hỏi 4–8 bước lập luận cộng trừ nhân chia liên tiếp (Chain-of-Thought). |
+| **4. TruthfulQA & HaluEval** | **Độ trung thực & Chống ảo giác (Truthfulness & Hallucination):** Kiểm tra xem mô hình có bị lừa bởi những tin đồn/ngộ nhận phổ biến của con người hay không. | Hỏi các câu dễ gây ngộ nhận để xem mô hình nói sự thật khoa học hay bịa chuyện theo đám đông. |
+| **5. MT-Bench & Chatbot Arena (LMSYS)** | **Chất lượng Hội thoại đa lượt & Đánh giá ngang hàng:** Dùng **LLM-as-a-Judge (GPT-4 chấm điểm)** hoặc người thật bình chọn mù (Blind A/B testing tính điểm **Elo**). | So sánh trực tiếp 2 mô hình ẩn danh qua các cuộc hội thoại phức tạp nhiều lượt. |
 
 ---
 
 ## 4. Các Độ đo Đánh giá Chuyên sâu (Evaluation Metrics - BẮT BUỘC THUỘC LÒNG!)
 
-### 4.1. Bộ Độ đo cho Bài toán Phân loại: Confusion Matrix, Precision, Recall & F1-Score
-Khi đánh giá mô hình phân loại (ví dụ: Phát hiện email Spam, Phát hiện giao dịch gian lận, Kiểm duyệt nội dung độc hại), ta lập **Ma trận Nhầm lẫn (Confusion Matrix)** gồm 4 ô:
-* **TP (True Positive - Dương tính thật):** Thực tế là Spam, mô hình đoán đúng là Spam.
-* **TN (True Negative - Âm tính thật):** Thực tế là Email thường, mô hình đoán đúng là Email thường.
-* **FP (False Positive - Dương tính giả / Báo động giả - Lỗi loại I):** Thực tế là Email quan trọng của sếp, nhưng mô hình lại bắt nhầm vào hòm Spam!
-* **FN (False Negative - Âm tính giả / Bỏ lọt tội phạm - Lỗi loại II):** Thực tế là Giao dịch lừa đảo (hoặc bệnh nhân mắc bệnh hiểm nghèo), nhưng mô hình lại bảo là Bình thường!
-
-| Độ đo (Metric) | Công thức Toán học | Ý nghĩa trực quan & Khi nào phải ưu tiên? (Hay hỏi thi!) |
-| :--- | :--- | :--- |
-| **Accuracy (Độ chính xác tổng thể)** | $$\frac{TP + TN}{TP + TN + FP + FN}$$ | Tỷ lệ đoán đúng trên tổng số mẫu. **CẢNH BÁO BẪY:** Hoàn toàn vô dụng khi dữ liệu mất cân bằng (**Imbalanced Data**, VD: 99% bình thường, 1% gian lận $\to$ đoán bừa tất cả là bình thường cũng đạt Accuracy 99%!). |
-| **Precision (Độ chuẩn xác)** | $$\frac{TP}{TP + FP}$$ | *"Trong tất cả những cái mô hình hô là Dương tính, có bao nhiêu % là đúng thật?"* <br/>👉 **Ưu tiên khi chi phí của False Positive (Bắt nhầm) quá đắt:** Ví dụ **Lọc Email Spam** hoặc **Gợi ý video cho trẻ em** (thà sót vài tin rác còn hơn xóa nhầm email hợp đồng triệu đô của khách!). |
-| **Recall (Độ phủ / Độ nhạy - Sensitivity)** | $$\frac{TP}{TP + FN}$$ | *"Trong tất cả các ca Dương tính thực tế ngoài đời, mô hình tóm được bao nhiêu %?"* <br/>👉 **Ưu tiên khi chi phí của False Negative (Bỏ lọt) nguy hiểm chết người:** Ví dụ **Chẩn đoán ung thư**, **Phát hiện giao dịch gian lận ngân hàng**, **Lọc mã độc** (thà báo động nhầm để kiểm tra lại còn hơn bỏ sót kẻ gian/bệnh nhân!). |
-| **F1-Score (Điểm cân bằng)** | $$2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}$$ | Trung bình điều hòa (Harmonic Mean) giữa Precision và Recall. <br/>👉 **Thước đo VÀNG bắt buộc dùng khi Tập dữ liệu mất cân bằng (Imbalanced Dataset)** và cần cân bằng cả hai loại lỗi FP và FN! |
-
----
-
-### 4.2. Ba Độ đo cho Bài toán Ngôn ngữ & GenAI: BLEU, ROUGE, Cosine Similarity
+### 4.1. Bộ Độ đo cho Bài toán Phân loại: Confusion Matrix, Precision, Recall, F1 & ROC-AUC
+Khi đánh giá mô hình phân loại (ví dụ: Phát hiện email Spam, Phát hiện giao dịch gian lận, Chẩn đoán bệnh, Kiểm duyệt nội dung độc hại), ta lập **Ma trận Nhầm lẫn (Confusion Matrix)** gồm 4 ô:
 
 ```mermaid
 flowchart TD
-    Metrics["Ba Độ đo Đánh giá Ngôn ngữ & GenAI Cốt lõi"]
+    subgraph CM["Ma trận Nhầm lẫn (Confusion Matrix)"]
+        direction LR
+        subgraph Pred_Pos["Mô hình Dự đoán: DƯƠNG TÍNH (Positive / Có bệnh / Spam)"]
+            TP["✅ TP (True Positive - Dương tính thật)<br/>Thực tế: Dương tính | Mô hình đoán: Dương tính<br/>(Bắt trúng Spam / Bắt trúng kẻ gian!)"]
+            FP["❌ FP (False Positive - Dương tính giả / Lỗi Loại I)<br/>Thực tế: Âm tính | Mô hình đoán nhầm: Dương tính<br/>(Báo động giả: Xóa nhầm email hợp đồng của sếp vào thùng rác!)"]
+        end
+        subgraph Pred_Neg["Mô hình Dự đoán: ÂM TÍNH (Negative / Bình thường)"]
+            FN["🚨 FN (False Negative - Âm tính giả / Lỗi Loại II)<br/>Thực tế: Dương tính | Mô hình đoán nhầm: Âm tính<br/>(Bỏ lọt tội phạm / Bỏ sót bệnh nhân ung thư!)"]
+            TN["✅ TN (True Negative - Âm tính thật)<br/>Thực tế: Âm tính | Mô hình đoán: Âm tính<br/>(Email thường cho vào hộp thư đến bình thường)"]
+        end
+    end
+```
+
+| Độ đo (Metric) | Công thức Toán học | Ý nghĩa trực quan & Khi nào phải ưu tiên? (Cực kỳ hay hỏi thi!) |
+| :--- | :--- | :--- |
+| **1. Accuracy (Độ chính xác tổng thể)** | $$\frac{TP + TN}{TP + TN + FP + FN}$$ | Tỷ lệ đoán đúng trên tổng số mẫu. <br/>⚠️ **CẢNH BÁO BẪY:** Chỉ dùng khi dữ liệu cân bằng (50/50). **Hoàn toàn vô dụng và gây hiểu lầm nghiêm trọng khi dữ liệu mất cân bằng (Imbalanced Data)** (VD: 99% bình thường, 1% gian lận $\to$ một mô hình "ngu" đoán tất cả là bình thường cũng đạt Accuracy 99%!). |
+| **2. Precision (Độ chuẩn xác / Độ tin cậy dương tính)** | $$\frac{TP}{TP + FP}$$ | *"Trong tất cả những trường hợp mô hình HÔ LÊN là Dương tính, có bao nhiêu % là Dương tính thật?"* <br/>👉 **Ưu tiên tối đa khi chi phí của False Positive (FP - Bắt nhầm / Báo động giả) quá đắt:** Ví dụ **Lọc Email Spam**, **Khóa tài khoản người dùng tự động**, **Gợi ý video an toàn cho trẻ em** (thà để sót vài tin rác vào Inbox còn hơn tự động xóa mất email hợp đồng triệu đô của khách hàng!). |
+| **3. Recall (Độ bao phủ / Độ nhạy - Sensitivity / TPR)** | $$\frac{TP}{TP + FN}$$ | *"Trong tất cả các ca Dương tính thực tế ngoài đời, mô hình TÓM ĐƯỢC bao nhiêu %?"* <br/>👉 **Ưu tiên tối đa khi chi phí của False Negative (FN - Bỏ lọt) nguy hiểm chết người:** Ví dụ **Sàng lọc bệnh ung thư**, **Phát hiện giao dịch gian lận/rửa tiền**, **Phát hiện mã độc/xâm nhập mạng**, **Phát hiện lỗi phanh xe tự hành** (thà báo động nhầm để bác sĩ/nhân viên kiểm tra lại còn hơn bỏ sót bệnh nhân/kẻ trộm!). |
+| **4. F1-Score (Điểm cân bằng)** | $$2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}$$ | Trung bình điều hòa (Harmonic Mean) giữa Precision và Recall (chỉ cao khi cả Precision và Recall đều cao). <br/>👉 **Thước đo VÀNG bắt buộc chọn trong đề thi khi Tập dữ liệu mất cân bằng (Imbalanced Dataset)** và cần cân bằng cả hai loại lỗi FP và FN! |
+| **5. ROC-AUC (Area Under the ROC Curve)** | Diện tích dưới đường cong biểu diễn **TPR (Recall)** theo **FPR ($\frac{FP}{FP+TN}$)** tại mọi ngưỡng cắt xác suất (Threshold) | Đo lường khả năng phân tách hai lớp của mô hình độc lập với ngưỡng cắt (từ $0.0$ đến $1.0$; đoán ngẫu nhiên tung đồng xu = $0.5$, hoàn hảo = $1.0$). |
+
+---
+
+### 4.2. Bộ Độ đo cho Bài toán Hồi quy (Regression Metrics: Dự đoán số liên tục)
+Khi mô hình dự đoán giá nhà, nhiệt độ, doanh số, đề thi có thể hỏi về 4 chỉ số sau:
+1. **MAE (Mean Absolute Error):** Trung bình trị tuyệt đối sai số $\frac{1}{n}\sum |y_i - \hat{y}_i|$. Dễ hiểu, cùng đơn vị với biến mục tiêu, **ít bị ảnh hưởng bởi các điểm dị biệt (Outliers)**.
+2. **MSE (Mean Squared Error) & RMSE (Root MSE):** Trung bình bình phương sai số $\frac{1}{n}\sum (y_i - \hat{y}_i)^2$ (và căn bậc hai của nó). Vì bình phương sai số nên **phạt cực nặng các lỗi dự đoán sai lệch lớn (Outliers)**.
+3. **$R^2$ (R-Squared / Coefficient of Determination):** Cho biết mô hình giải thích được bao nhiêu % sự biến thiên của dữ liệu (gần $1.0$ là mô hình khớp hoàn hảo).
+
+---
+
+### 4.3. Các Độ đo cho Bài toán Ngôn ngữ & GenAI: BLEU, ROUGE, BERTScore, Cosine Similarity & RAG Triad
+
+```mermaid
+flowchart TD
+    Metrics["Các Độ đo Đánh giá Ngôn ngữ & GenAI Cốt lõi"]
     
     subgraph M1["1. BLEU (Bilingual Evaluation Understudy)"]
         B1["🎯 Bài toán: DỊCH MÁY (Machine Translation)"]
-        B2["🔍 Bản chất: Thiên về Độ chính xác (PRECISION-oriented)<br/>Đếm tỷ lệ cụm từ (n-grams) trong bản dịch AI<br/>trùng khớp chính xác với bản dịch mẫu của người"]
-        B3["📏 Thang điểm: 0.0 đến 1.0 (Càng cao càng tốt)"]
+        B2["🔍 Bản chất: Thiên về Độ chuẩn xác (PRECISION-oriented)<br/>Đếm tỷ lệ cụm từ (1-gram đến 4-gram) trong bản dịch AI<br/>xuất hiện trùng khớp trong bản dịch mẫu của người (kèm Brevity Penalty)"]
+        B3["📏 Thang điểm: 0.0 đến 1.0 (hoặc 0 - 100; Càng cao càng tốt)"]
         B1 --> B2 --> B3
     end
 
     subgraph M2["2. ROUGE (Recall-Oriented Understudy for Gisting Evaluation)"]
         R1["🎯 Bài toán: TÓM TẮT VĂN BẢN (Text Summarization)"]
-        R2["🔍 Bản chất: Thiên về Độ bao phủ (RECALL-oriented)<br/>Kiểm tra bản tóm tắt của AI có nhặt đủ các ý chính<br/>xuất hiện trong bản tóm tắt chuẩn hay không"]
-        R3["📏 Biến thể: ROUGE-1 (từ đơn), ROUGE-2 (cặp từ), ROUGE-L (chuỗi chung dài nhất)"]
+        R2["🔍 Bản chất: Thiên về Độ bao phủ (RECALL-oriented)<br/>Kiểm tra bản tóm tắt của AI có nhặt đủ các từ/ý chính<br/>xuất hiện trong bản tóm tắt chuẩn của người hay không"]
+        R3["📏 Biến thể: ROUGE-1 (từ đơn), ROUGE-2 (cặp từ), ROUGE-L (chuỗi con chung dài nhất LCS)"]
         R1 --> R2 --> R3
     end
 
-    subgraph M3["3. Cosine Similarity (Độ tương đồng Cosine)"]
-        C1["🎯 Bài toán: TÌM KIẾM NGỮ NGHĨA (Semantic Search) & RAG"]
-        C2["🔍 Bản chất: Đo góc giữa 2 Vector Embedding trong không gian đa chiều<br/>Đánh giá mức độ gần gũi về Ý NGHĨA chứ không đếm chữ bề mặt"]
-        C3["📏 Thang điểm: -1.0 đến 1.0 (Văn bản thường từ 0 đến 1; 1 = Trùng khớp nghĩa)"]
+    subgraph M3["3. Cosine Similarity & BERTScore (Ngữ nghĩa Vector)"]
+        C1["🎯 Bài toán: TÌM KIẾM NGỮ NGHĨA (Semantic Search), RAG & Đánh giá Từ đồng nghĩa"]
+        C2["🔍 Bản chất: Đo cô-sin góc giữa 2 Vector Embedding trong không gian đa chiều<br/>Đánh giá mức độ gần gũi về Ý NGHĨA chứ không đếm chữ bề mặt!"]
+        C3["📏 Thang điểm: -1.0 đến 1.0 (Văn bản thường từ 0 đến 1; 1.0 = Trùng khớp nghĩa hoàn toàn)"]
         C1 --> C2 --> C3
     end
 
     Metrics --> M1 & M2 & M3
 ```
 
-1. **BLEU (Bilingual Evaluation Understudy) $\to$ DỊCH MÁY (Translation):**
+1. **BLEU (Bilingual Evaluation Understudy) $\to$ DỊCH MÁY (Machine Translation):**
    * *Mẹo nhớ:* **B**ilingual (Song ngữ) = **Dịch thuật**!
-   * *Bản chất:* **Precision-oriented**. Đếm xem câu máy dịch có bao nhiêu từ/cụm từ xuất hiện chuẩn xác trong bản dịch tham chiếu của con người. (Nhược điểm: Nếu máy dùng từ đồng nghĩa khác hoàn toàn từ trong đáp án mẫu, điểm BLEU vẫn bị phạt thấp).
+   * *Bản chất:* **Precision-oriented** (kèm hệ số phạt *Brevity Penalty* nếu máy dịch câu quá ngắn). Đếm xem câu máy dịch có bao nhiêu n-gram xuất hiện chuẩn xác trong bản dịch tham chiếu của con người.
 2. **ROUGE (Recall-Oriented Understudy for Gisting Evaluation) $\to$ TÓM TẮT (Summarization):**
    * *Mẹo nhớ:* **R**ecall-Oriented ... for **Gisting** (Gist = Ý chính / Tóm tắt)!
-   * *Bản chất:* **Recall-oriented**. Kiểm tra bài tóm tắt của AI có nhặt đủ các ý chính quan trọng trong văn bản gốc hay không (**ROUGE-1** đo từ đơn, **ROUGE-2** đo cặp từ, **ROUGE-L** đo chuỗi con chung dài nhất - Longest Common Subsequence).
-3. **Cosine Similarity (Độ tương đồng Cosine) $\to$ TÌM KIẾM VECTOR & RAG:**
-   * *Công thức toán học:*
+   * *Bản chất:* **Recall-oriented**. Kiểm tra bài tóm tắt của AI có bao phủ đủ các ý chính quan trọng trong bản tóm tắt chuẩn hay không:
+     * **ROUGE-1:** Độ trùng khớp từng từ đơn (Unigrams).
+     * **ROUGE-2:** Độ trùng khớp từng cặp 2 từ liên tiếp (Bigrams).
+     * **ROUGE-L:** Dựa trên **Chuỗi con chung dài nhất (Longest Common Subsequence - LCS)** để đánh giá cấu trúc mạch câu mà không đòi hỏi các từ phải đứng sát cạnh nhau.
+3. **Hạn chế chung của BLEU & ROUGE và Giải pháp `BERTScore`:**
+   * Vì BLEU và ROUGE chỉ **đếm sự trùng khớp mặt chữ (Exact lexical / n-gram overlap)**, nên nếu đáp án mẫu là *"Chiếc xe hơi chạy rất nhanh"* mà AI viết là *"Chiếc ô tô di chuyển với tốc độ cao"*, điểm BLEU/ROUGE sẽ rất thấp dù hai câu đồng nghĩa 100%!
+   * **Giải pháp – `BERTScore` & `Cosine Similarity`:** Đưa cả câu của AI và câu mẫu qua mô hình Embedding (như BERT/RoBERTa) rồi tính **Cosine Similarity** giữa các vector nhúng để chấm điểm **tương đồng về mặt ngữ nghĩa (Semantic Similarity)**:
      $$\text{Cosine Similarity}(\mathbf{A}, \mathbf{B}) = \cos(\theta) = \frac{\mathbf{A} \cdot \mathbf{B}}{\|\mathbf{A}\| \|\mathbf{B}\|}$$
-   * Đo mức độ gần gũi về **ngữ nghĩa** giữa hai vector nhúng trong hệ thống **Semantic Search** và **RAG**.
+4. **Bộ 3 Chỉ số Đánh giá Hệ thống RAG (The RAG Triad - Rất thực tế trong NeMo Evaluator / Ragas):**
+   Khi đánh giá một pipeline RAG, kỹ sư đo lường 3 cạnh của tam giác chất lượng:
+   * **Context Relevance (Độ liên quan của Ngữ cảnh truy xuất):** Các đoạn văn (Chunks) mà Vector DB tìm ra có thực sự liên quan đến câu hỏi của User không?
+   * **Groundedness / Faithfulness (Tính trung thực với Ngữ cảnh - Chống Hallucination):** Câu trả lời của LLM có bám sát 100% vào dữ kiện trong Chunks vừa tìm được không, hay nó tự bịa thêm thông tin bên ngoài?
+   * **Answer Relevance (Độ trúng đích của Câu trả lời):** Câu trả lời cuối cùng có giải quyết đúng câu hỏi ban đầu của User không?
 
 ---
 
-## 5. Phương pháp Kiểm thử Thực tế: Cross-Validation vs. A/B Testing
+## 5. Phương pháp Kiểm thử Thực tế: Cross-Validation, A/B Testing & Canary Deployment
 
-### 5.1. k-Fold Cross-Validation (Kiểm định chéo k-Fold)
-* **Khi nào sử dụng?** Khi doanh nghiệp có **tập dữ liệu giới hạn (limited dataset)** và muốn đánh giá khả năng tổng quát hóa của mô hình một cách đáng tin cậy nhất mà không bị lệch do cách chia Train/Test ngẫu nhiên.
-* **Cách vận hành (Ví dụ 5-Fold Cross-Validation):** Chia tập dữ liệu thành $k = 5$ phần bằng nhau (Folds). Lặp 5 lần: mỗi lần lấy **1 Fold làm Validation** và **4 Folds còn lại làm Train**, sau đó lấy trung bình cộng kết quả của cả 5 lần.
+### 5.1. Chia tập dữ liệu (Train / Validation / Test Split) & k-Fold Cross-Validation
+* **Ba tập dữ liệu tách biệt trong huấn luyện:**
+  1. **Training Set (~70–80%):** Dùng để mô hình học và cập nhật trọng số (Backpropagation).
+  2. **Validation Set / Dev Set (~10–15%):** Dùng để chấm điểm sau mỗi Epoch nhằm **tinh chỉnh siêu tham số (Hyperparameter Tuning)**, chọn kiến trúc và kích hoạt **Early Stopping** (dừng sớm chống Overfitting).
+  3. **Test Set / Holdout Set (~10–15%):** Cất kỹ trong "két sắt", **chỉ mang ra chạy đúng 1 lần cuối cùng** để báo cáo hiệu năng khách quan. *(Nếu vô tình để dữ liệu Test lọt vào tập Train hoặc dùng tập Test để chỉnh tham số sẽ gây lỗi nghiêm trọng gọi là **Data Leakage / Rò rỉ dữ liệu**!).*
+* **k-Fold Cross-Validation (Kiểm định chéo k-Fold):**
+  * *Khi nào sử dụng?* Khi doanh nghiệp có **tập dữ liệu giới hạn / nhỏ (Limited dataset)** và muốn đánh giá khả năng tổng quát hóa của mô hình một cách đáng tin cậy nhất trên toàn bộ mẫu dữ liệu mà không bị may rủi do một lần chia Train/Validation ngẫu nhiên. *(Nếu dữ liệu mất cân bằng nhãn, dùng **Stratified k-Fold** để giữ nguyên tỷ lệ % các nhãn ở mọi Fold).*
 
 ```mermaid
 flowchart TD
-    subgraph CV["Minh họa 5-Fold Cross-Validation (Mỗi Fold lần lượt làm Validation)"]
+    subgraph CV["Minh họa 5-Fold Cross-Validation (Mỗi Fold lần lượt đóng vai trò làm Validation đúng 1 lần)"]
         L1["Lần lặp 1: [Validation: Fold 1] | [Train: Fold 2 + Fold 3 + Fold 4 + Fold 5] -> Điểm E1"]
         L2["Lần lặp 2: [Validation: Fold 2] | [Train: Fold 1 + Fold 3 + Fold 4 + Fold 5] -> Điểm E2"]
         L3["Lần lặp 3: [Validation: Fold 3] | [Train: Fold 1 + Fold 2 + Fold 4 + Fold 5] -> Điểm E3"]
         L4["Lần lặp 4: [Validation: Fold 4] | [Train: Fold 1 + Fold 2 + Fold 3 + Fold 5] -> Điểm E4"]
         L5["Lần lặp 5: [Validation: Fold 5] | [Train: Fold 1 + Fold 2 + Fold 3 + Fold 4] -> Điểm E5"]
-        Avg["👉 Kết quả cuối cùng = Trung bình cộng (E1 + E2 + E3 + E4 + E5) / 5"]
+        Avg["👉 Kết quả đánh giá cuối cùng = Trung bình cộng (E1 + E2 + E3 + E4 + E5) / 5 (± Độ lệch chuẩn)"]
         
         L1 --> L2 --> L3 --> L4 --> L5 --> Avg
     end
 ```
 
-### 5.2. A/B Testing trong môi trường Production
-* Giải quyết bài toán đánh đổi **Explore (Khám phá mô hình mới)** vs. **Exploit (Khai thác mô hình cũ an toàn)**: Phân luồng ngẫu nhiên 50% người dùng thật vào **Model A (Hiện tại)** và 50% vào **Model B (Mới)** trong cùng điều kiện thời gian thực để đo lường chỉ số kinh doanh (CTR, tỷ lệ chuyển đổi, độ trễ) trước khi quyết định nâng cấp toàn bộ.
+### 5.2. Kiểm thử trên môi trường Production: A/B Testing, Canary Rollout & Shadow Deployment
+1. **A/B Testing:**
+   * Giải quyết bài toán đánh đổi **Explore (Khám phá mô hình mới)** vs. **Exploit (Khai thác mô hình cũ an toàn)**: Chia ngẫu nhiên lưu lượng người dùng thật (ví dụ 50% vào **Model A - Control** và 50% vào **Model B - Treatment**) chạy song song trong cùng điều kiện thời gian thực để đo lường chỉ số kinh doanh (Tỷ lệ nhấp chuột CTR, tỷ lệ mua hàng, điểm hài lòng Thumbs-up/Thumbs-down) có ý nghĩa thống kê ($p\text{-value} < 0.05$).
+2. **Canary Deployment (Triển khai Chim hoàng yến):**
+   * Ban đầu chỉ điều hướng một lượng cực nhỏ người dùng thật (ví dụ **1% – 5% traffic**) sang mô hình mới để theo dõi lỗi hệ thống, độ trễ và phản hồi; nếu ổn định mới tăng dần lên 25% $\to$ 50% $\to$ 100%.
+3. **Shadow Deployment (Triển khai Bóng râm / Dark Launch):**
+   * Mọi request của người dùng vẫn do mô hình cũ trả lời, nhưng hệ thống âm thầm nhân bản (mirror) request đó gửi song song cho mô hình mới chạy ngầm để ghi log so sánh kết quả mà **không gây bất kỳ rủi ro nào cho người dùng cuối**.
 
 ---
 
@@ -167,14 +239,25 @@ flowchart TD
 > [!WARNING]
 > **Các bẫy kinh điển trong đề thi Module 5:**
 > 1. **Bẫy ghép cặp Metric Ngôn ngữ:**
->    * Dịch thuật (Machine Translation) $\leftrightarrow$ **BLEU** (Precision).
->    * Tóm tắt (Text Summarization) $\leftrightarrow$ **ROUGE** (Recall).
+>    * Dịch thuật (Machine Translation) $\leftrightarrow$ **BLEU** (Precision-oriented).
+>    * Tóm tắt (Text Summarization) $\leftrightarrow$ **ROUGE** (Recall-oriented).
 >    * Tìm kiếm vector / RAG (Semantic Search) $\leftrightarrow$ **Cosine Similarity**.
 > 2. **Bẫy Imbalanced Data (Dữ liệu mất cân bằng):** Khi tập dữ liệu có 98% nhãn A và chỉ 2% nhãn B, độ đo **Accuracy** trở nên vô nghĩa. Phải chọn **F1-Score** (hoặc **Precision / Recall / ROC-AUC**).
-> 3. **Bẫy Precision vs. Recall:** Không được phép bỏ sót ca bệnh/gian lận (sợ False Negative) $\to$ Ưu tiên **Recall**. Không được phép bắt nhầm email thường thành Spam (sợ False Positive) $\to$ Ưu tiên **Precision**.
+> 3. **Bẫy Precision vs. Recall:**
+>    * Không được phép bỏ sót ca bệnh hiểm nghèo / giao dịch gian lận (sợ **False Negative**) $\to$ Ưu tiên **Recall**.
+>    * Không được phép bắt nhầm email thường thành Spam / khóa nhầm tài khoản khách VIP (sợ **False Positive**) $\to$ Ưu tiên **Precision**.
+> 4. **Bẫy SLM vs. LLM:** Chạy trên thiết bị biên (Edge/Mobile/IoT), yêu cầu độ trễ cực thấp (Low latency), thông lượng cao cho một tác vụ chuyên biệt $\to$ Chọn **SLM (Small Language Model)**.
 
 ### Câu hỏi tự kiểm tra (Mini Quiz):
 1. **Câu 1:** Một ngân hàng huấn luyện mô hình phát hiện rửa tiền trên tập dữ liệu gồm 99.9% giao dịch hợp pháp và 0.1% giao dịch rửa tiền. Mô hình đạt Accuracy 99.9% nhưng không bắt được bất kỳ giao dịch rửa tiền nào trên thực tế. Độ đo nào nên được sử dụng thay cho Accuracy để đánh giá đúng hiệu quả của mô hình này?
-   * *Đáp án:* **Recall** (để đo tỷ lệ bắt trúng giao dịch rửa tiền) kết hợp với **F1-Score** (để cân bằng trên tập dữ liệu mất cân bằng).
-2. **Câu 2:** Một kỹ sư AI đang xây dựng hệ thống tự động tóm tắt các biên bản cuộc họp dài 10 trang thành 5 gạch đầu dòng ngắn gọn. Độ đo (Metric) nào phù hợp nhất để đánh giá chất lượng bản tóm tắt?
+   * *Đáp án:* **Recall** (để đo tỷ lệ bắt trúng các giao dịch rửa tiền thực tế) kết hợp với **F1-Score** (trung bình điều hòa cân bằng giữa Precision và Recall trên tập dữ liệu mất cân bằng).
+2. **Câu 2:** Một kỹ sư AI đang xây dựng hệ thống tự động tóm tắt các biên bản cuộc họp dài 10 trang thành 5 gạch đầu dòng ngắn gọn. Độ đo (Metric) nào phù hợp nhất để đánh giá xem bản tóm tắt có giữ lại đầy đủ các ý chính của cuộc họp hay không?
    * *Đáp án:* **ROUGE (Recall-Oriented Understudy for Gisting Evaluation)**.
+3. **Câu 3:** Một hãng sản xuất ô tô muốn tích hợp mô hình ngôn ngữ vào chip xử lý trên xe hơi để nhận diện giọng nói điều khiển điều hòa và bản đồ ngay cả khi xe đi vào vùng mất sóng Internet, với yêu cầu phản hồi dưới 50 mili-giây. Họ nên lựa chọn **SLM** hay **LLM**?
+   * *Đáp án:* **SLM (Small Language Model)** vì có kích thước nhỏ gọn, chạy trực tiếp được trên phần cứng biên (Edge hardware) không cần kết nối Cloud và đảm bảo độ trễ cực thấp (Low latency).
+4. **Câu 4:** Khi đọc hồ sơ của một mô hình mã nguồn mở trên Hugging Face hoặc NVIDIA NGC để kiểm tra xem mô hình đó có cho phép sử dụng cho mục đích thương mại hay không, được huấn luyện trên dữ liệu gì và có những rủi ro thiên vị nào đã biết, kỹ sư cần tra cứu tài liệu nào?
+   * *Đáp án:* **Model Card**.
+5. **Câu 5:** Một công ty y tế chỉ thu thập được một tập dữ liệu nhỏ gồm 1.000 bệnh án đã gắn nhãn. Để đánh giá độ chính xác của mô hình phân loại một cách tin cậy nhất mà không lãng phí dữ liệu cho một tập Validation cố định, kỹ thuật kiểm thử nào nên được áp dụng?
+   * *Đáp án:* **k-Fold Cross-Validation** (hoặc *Stratified k-Fold Cross-Validation*).
+6. **Câu 6:** Trong hệ thống lọc email rác (Spam Filter), người dùng phàn nàn rằng nhiều email công việc quan trọng của đối tác bị hệ thống tự động ném vào thư mục Spam (tức lỗi **False Positive** cao). Kỹ sư cần điều chỉnh ngưỡng phân loại của mô hình để tối ưu hóa chỉ số nào?
+   * *Đáp án:* Tối ưu hóa **Precision (Độ chuẩn xác)** — nhằm giảm thiểu tối đa số lượng False Positives ($FP$).
