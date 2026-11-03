@@ -80,7 +80,9 @@ Khi thiết kế bộ Tokenizer (Bước 1), tại sao các kỹ sư không cắ
 | :--- | :--- | :--- |
 | **1. Whole-word (Từ nguyên vẹn)** | Cắt theo khoảng trắng: `["unbelievable", "dogs"]` | • Từ điển phình to hàng triệu từ (do chia động từ, số nhiều, từ ghép).<br/>• Gặp từ mới, tên riêng hoặc từ gõ sai chính tả là dính lỗi **OOV (Out-of-Vocabulary)** $\to$ biến thành token mù `<UNK>`. |
 | **2. Character-level (Từng chữ cái)** | Cắt từng ký tự: `['u', 'n', 'b', 'e', ...]` | • Từ điển siêu nhỏ (vài trăm ký tự), không bị OOV.<br/>• Nhưng **bản thân chữ cái `'u'` không mang ngữ nghĩa**, và chuỗi token bị kéo dài gấp 5–7 lần làm nổ tung chi phí tính toán Attention! |
-| **3. Subword Tokenization (Mã hóa từ con - CHUẨN HIỆN ĐẠI)** | Giữ nguyên từ phổ biến (`"dog"`), chỉ tách từ hiếm/phức tạp thành **Tiền tố + Gốc từ + Hậu tố** | **Điểm cân bằng hoàn hảo (Sweet Spot):** Từ điển gọn nhẹ (32K – 128K tokens), giữ trọn vẹn ngữ nghĩa gốc từ và **không bao giờ bị lỗi OOV**! |
+| **3. Subword Tokenization (Mã hóa từ con - PHỔ BIẾN HIỆN NAY)** | Giữ nguyên từ phổ biến (`"dog"`), tách từ hiếm/phức tạp thành **Tiền tố + Gốc từ + Hậu tố** | **Điểm cân bằng hiệu quả (Sweet Spot):** Từ điển gọn nhẹ (thường 32K – 128K+ tokens), giữ được ngữ nghĩa gốc từ và **giảm đáng kể vấn đề OOV** so với word-level tokenization! |
+
+> **Lưu ý kỹ thuật về OOV trong Subword Tokenization:** Subword tokenization thường làm giảm vấn đề OOV so với word-level tokenization. Các tokenizer có cơ chế **byte fallback** hoặc **byte-level coverage** (như Byte-level BPE trong GPT/LLaMA) có thể biểu diễn chuỗi UTF-8 bất kỳ ở mức byte; tuy nhiên khả năng bao phủ chính xác phụ thuộc vào thiết kế tokenizer (ví dụ WordPiece không có byte fallback vẫn có thể sinh `<UNK>` khi gặp ký tự lạ ngoài bảng chữ cái) và tập ký tự hỗ trợ. Do đó không nên khẳng định **mọi** subword tokenizer đều không bao giờ gặp OOV.
 
 * **Ví dụ kinh điển về Subword Tokenization:** Ba từ `unbelievable`, `unbreakable`, `unlikeable` không cần lưu thành 3 mục từ riêng biệt mà được lắp ghép từ 5 mảnh subword có nghĩa:
   $$\text{\texttt{un}} + \{\text{\texttt{believ}}, \text{\texttt{break}}, \text{\texttt{like}}\} + \text{\texttt{able}}$$
@@ -183,9 +185,13 @@ flowchart TD
 
 | Tham số | Bản chất Toán học & Cơ chế | Khi giá trị THẤP | Khi giá trị CAO |
 | :--- | :--- | :--- | :--- |
-| **1. Temperature ($T$)** | Chia điểm thô (logits $z_i$) cho $T$ trước khi đưa vào hàm Softmax: $$P_i = \frac{\exp(z_i / T)}{\sum \exp(z_j / T)}$$ Điều chỉnh "độ nhọn" hay "độ phẳng" của phân phối xác suất. | **$T \to 0$ (VD: $0.0 - 0.2$):** Làm nhọn phân phối; từ có xác suất cao nhất chiếm gần 100% (khi $T=0$ tương đương Greedy Decoding). Đầu ra **chính xác, nhất quán, có tính quyết định (Deterministic)** $\to$ *Dùng cho sinh Code, SQL, trích xuất JSON, Toán học, Hỏi đáp RAG*. | **$T \ge 0.8 - 1.2$:** Làm phẳng phân phối; các từ xác suất thấp hơn cũng có cơ hội được chọn. Đầu ra **đa dạng, sáng tạo bay bổng** nhưng nếu quá cao ($T > 1.5$) sẽ sinh văn bản lộn xộn và ảo giác $\to$ *Dùng cho viết thơ, sáng tác truyện, Brainstorming*. |
-| **2. Top-K Sampling** | Cắt cứng theo **số lượng ứng viên**: Sắp xếp các token theo xác suất giảm dần, chỉ giữ lại đúng **$K$ token đứng đầu**, loại bỏ toàn bộ phần đuôi còn lại rồi chuẩn hóa lại xác suất để lấy mẫu. | **$K = 1$:** Chính là Greedy Decoding (chỉ lấy 1 từ cao điểm nhất). | **$K = 40$ hoặc $50$:** Cho phép chọn trong 40–50 từ hợp lý nhất, cắt bỏ phần đuôi dài (long tail) chứa các từ hoàn toàn vô nghĩa. *(Hạn chế: $K$ cố định nên không thích ứng được khi phân phối quá nhọn hoặc quá phẳng).* |
-| **3. Top-P (Nucleus Sampling)** | Cắt động theo **tổng xác suất tích lũy (Cumulative Probability)**: Sắp xếp các từ từ cao xuống thấp và cộng dồn xác suất cho đến khi chạm ngưỡng $P$ thì dừng lại (tập hạt nhân - Nucleus). | **$P = 0.1$ (10%):** Chỉ xét nhóm hạt nhân cực nhỏ các từ chắc chắn nhất. | **$P = 0.90$ (90%):** Tự động co giãn thông minh số lượng từ ứng viên — nếu mô hình rất chắc chắn (`P("cat") = 0.92`), tập ứng viên tự thu hẹp chỉ còn 1 từ; nếu câu mở có nhiều hướng đi, nó tự mở rộng ra 50 từ để giữ sự tự nhiên! |
+| **1. Temperature ($T$)** | Chia điểm thô (logits $z_i$) cho $T$ trước khi đưa vào hàm Softmax: $$P_i = \frac{\exp(z_i / T)}{\sum \exp(z_j / T)}$$ Điều chỉnh "độ nhọn" hay "độ phẳng" của phân phối xác suất token. | **$T \to 0$ (VD: $0.0 - 0.2$):** Làm nhọn phân phối; giảm độ đa dạng khi lấy mẫu. Nhiều API quy ước `temperature=0` là **greedy decoding** (chọn token có logit cao nhất). Thường ưu tiên cho *sinh Code, SQL, trích xuất JSON, Hỏi đáp RAG* khi cần giảm tính ngẫu nhiên của bước sampling. | **$T \ge 0.8 - 1.2$:** Làm phẳng phân phối; các từ xác suất thấp hơn có thêm cơ hội được chọn. Đầu ra **đa dạng, giàu tính biến thiên hơn**, nhưng nếu đặt quá cao ($T > 1.5$) dễ sinh văn bản rời rạc và tăng nguy cơ ảo giác $\to$ *Thường dùng cho viết sáng tạo, Brainstorming*. |
+| **2. Top-K Sampling** | Cắt theo **số lượng ứng viên cố định**: Sắp xếp các token theo xác suất giảm dần, chỉ giữ lại **$K$ token đứng đầu**, loại bỏ phần đuôi còn lại rồi chuẩn hóa lại xác suất để lấy mẫu. | **$K = 1$:** Tương đương Greedy Decoding (chỉ lấy 1 từ có xác suất cao nhất). | **$K = 40$ hoặc $50$:** Cho phép chọn trong 40–50 từ hợp lý nhất, cắt bỏ phần đuôi dài (long tail) chứa các từ xác suất rất thấp. *(Hạn chế: $K$ cố định nên kém linh hoạt khi phân phối quá nhọn hoặc quá phẳng).* |
+| **3. Top-P (Nucleus Sampling)** | Cắt động theo **tổng xác suất tích lũy (Cumulative Probability)**: Sắp xếp các từ từ cao xuống thấp và cộng dồn xác suất cho đến khi chạm ngưỡng $P$ thì dừng lại (tập hạt nhân - Nucleus). | **$P = 0.1$ (10%):** Chỉ xét nhóm hạt nhân nhỏ các từ có xác suất cao nhất. | **$P = 0.90$ (90%):** Tự động co giãn số lượng từ ứng viên theo ngữ cảnh — nếu mô hình rất tự tin (`P("cat") = 0.92`), tập ứng viên thu hẹp; nếu câu mở có nhiều hướng đi, tập ứng viên tự mở rộng để giữ sự tự nhiên. |
+
+> [!WARNING]
+> **Lưu ý quan trọng về `temperature = 0` và tính tái lập (Reproducibility):**
+> Temperature chỉ điều chỉnh độ đa dạng của phân phối xác suất khi chọn token (**sampling diversity**), **không phải là bảo chứng cho tính đúng sự thật (truthfulness) hay độ chính xác nghiệp vụ**. Ngay cả khi đặt `temperature=0` (greedy decoding), **không đảm bảo đầu ra luôn đúng sự thật, an toàn hay giống hệt 100% giữa mọi lần chạy** (do khác biệt về floating-point non-determinism trên GPU, dynamic batching, phần cứng/backend hoặc phiên bản model). Khi ứng dụng LLM để sinh Code, SQL hoặc JSON trong sản xuất, lập trình viên phải kết hợp **schema validation** (như Pydantic/JSON Schema), **kiểm thử tự động (unit tests)**, **phân quyền tối thiểu (least-privilege DB permissions)** và các bước xác minh độc lập (Tham khảo: [PyTorch Reproducibility Notes](https://docs.pytorch.org/docs/stable/notes/randomness.html)).
 
 *(Ngoài ra còn có **Frequency Penalty** phạt các từ đã xuất hiện nhiều lần để chống lặp từ, và **Presence Penalty** khuyến khích mô hình chuyển sang chủ đề mới).*
 
@@ -242,30 +248,30 @@ Các mô hình lớn hiện đại (như **Mixtral 8x7B, DeepSeek-V3, GPT-4, DBR
 
 ---
 
-## 5. Bẫy đề thi NCA-GENL & Câu hỏi Thực chiến (Exam Traps & Mini Quiz)
+## 5. Lưu ý Ôn tập & Câu hỏi Luyện tập Minh họa (Review Notes & Practice Quiz)
 
 > [!WARNING]
-> **Các bẫy kinh điển trong đề thi Module 4:**
-> 1. **Bẫy chọn kiến trúc:**
->    * *Phân tích cảm xúc (Sentiment Analysis)*, *Trích xuất thực thể (NER)*, *Tạo Vector Embedding* $\to$ Chọn **Encoder-only (BERT)**.
->    * *Xây dựng Chatbot đối thoại, sinh văn bản mở, viết code* $\to$ Chọn **Decoder-only (GPT / LLaMA)**.
->    * *Dịch tài liệu đa ngôn ngữ (Translation)* hoặc *Tóm tắt văn bản (Summarization)* $\to$ Chọn **Encoder-Decoder (T5 / BART)**.
-> 2. **Bẫy Temperature & Top-P:**
->    * Muốn LLM sinh code Python/SQL chuẩn xác, trích xuất dữ liệu nhất quán không bịa đặt ngẫu nhiên $\to$ Chỉnh **Temperature thấp ($T \approx 0$)**.
+> **Các điểm cần lưu ý ở Module 4:**
+> 1. **Lựa chọn kiến trúc theo tác vụ:**
+>    * *Phân tích cảm xúc (Sentiment Analysis)*, *Trích xuất thực thể (NER)*, *Tạo Vector Embedding* $\to$ Thường ưu tiên **Encoder-only (BERT)**.
+>    * *Xây dựng Chatbot đối thoại, sinh văn bản mở, viết code* $\to$ Thường ưu tiên **Decoder-only (GPT / LLaMA)**.
+>    * *Dịch tài liệu đa ngôn ngữ (Translation)* hoặc *Tóm tắt văn bản (Summarization)* $\to$ Thường ưu tiên **Encoder-Decoder (T5 / BART)** (hoặc Decoder-only hiện đại tùy yêu cầu hệ thống).
+> 2. **Lưu ý về Temperature & Top-P:**
+>    * Khi cần giảm tính ngẫu nhiên trong lúc lấy mẫu cho các tác vụ có cấu trúc (như sinh code Python/SQL, trích xuất JSON) $\to$ Thường chỉnh **Temperature thấp ($T \approx 0$)**, đồng thời kết hợp kiểm tra cú pháp/schema và kiểm thử đầu ra.
 >    * Phương pháp lấy mẫu nào giới hạn động tập từ ứng viên dựa trên **tổng xác suất tích lũy (cumulative probability threshold)**? $\to$ Chọn **Top-P (Nucleus Sampling)**.
->    * Phương pháp lấy mẫu nào cắt cứng đúng **$K$ từ có xác suất cao nhất**? $\to$ Chọn **Top-K Sampling**.
-> 3. **Bẫy Query, Key, Value ($Q, K, V$):** Trong cơ chế Self-Attention, điểm số chú ý (Attention Weight) giữa hai từ được tính bằng tích vô hướng chuẩn hóa giữa hai vector nào trước khi nhân với Value ($V$)? $\to$ Giữa **Query ($Q$) và Key ($K$)** chia cho $\sqrt{d_k}$.
+>    * Phương pháp lấy mẫu nào cắt theo số lượng cố định **$K$ từ có xác suất cao nhất**? $\to$ Chọn **Top-K Sampling**.
+> 3. **Lưu ý Query, Key, Value ($Q, K, V$):** Trong cơ chế Self-Attention, điểm số chú ý (Attention Weight) giữa hai từ được tính bằng tích vô hướng chuẩn hóa giữa hai vector nào trước khi nhân với Value ($V$)? $\to$ Giữa **Query ($Q$) và Key ($K$)** chia cho $\sqrt{d_k}$.
 
-### Câu hỏi tự kiểm tra (Mini Quiz):
-1. **Câu 1:** Một lập trình viên đang tích hợp LLM để tự động chuyển đổi câu hỏi tiếng Việt của nhân viên thành câu lệnh truy vấn SQL chạy trên cơ sở dữ liệu kế toán. Để đảm bảo kết quả sinh ra luôn ổn định, chính xác và không có tính ngẫu nhiên, tham số `Temperature` nên được cấu hình như thế nào?
-   * *Đáp án:* Đặt **Temperature ở mức rất thấp (bằng `0` hoặc gần `0`, ví dụ `0.1`)** để làm nhọn phân phối xác suất, buộc mô hình luôn ưu tiên chọn các token có xác suất cao nhất (Deterministic output).
-2. **Câu 2:** Nếu loại bỏ hoàn toàn bước **Positional Encoding** khỏi kiến trúc Transformer, mô hình sẽ gặp phải vấn đề gì?
-   * *Đáp án:* Mô hình sẽ **không thể phân biệt được thứ tự vị trí của các từ trong câu** (coi câu văn như một tập hợp từ không thứ tự - Bag of Words), dẫn đến hiểu sai hoàn toàn ngữ nghĩa khi đổi chỗ chủ ngữ và tân ngữ.
+### Câu hỏi luyện tập minh họa (Mini Quiz):
+1. **Câu 1:** Một lập trình viên đang tích hợp LLM để chuyển đổi câu hỏi tiếng Việt của nhân viên thành câu lệnh truy vấn SQL. Để giảm độ đa dạng ngẫu nhiên khi lấy mẫu token (sampling diversity), tham số `Temperature` thường được cấu hình như thế nào, và cần lưu ý gì thêm khi đưa vào vận hành?
+   * *Đáp án:* Đặt **Temperature ở mức thấp (gần `0` hoặc bằng `0` cho greedy decoding)** để làm nhọn phân phối xác suất, ưu tiên các token có xác suất cao nhất. Tuy nhiên, vì `temperature=0` không tự động đảm bảo câu lệnh SQL luôn đúng sự thật, an toàn hay tái lập tuyệt đối trên mọi backend, lập trình viên cần kết hợp thêm bước kiểm tra schema, giới hạn quyền truy cập DB (read-only) và kiểm thử thực thi.
+2. **Câu 2:** Nếu loại bỏ hoàn toàn bước **Positional Encoding** khỏi kiến trúc Transformer (không có thông tin vị trí hay causal mask), cơ chế Self-Attention sẽ gặp phải hạn chế gì?
+   * *Đáp án:* Phép toán Self-Attention sẽ **mất khả năng phân biệt thứ tự vị trí của các từ trong câu** (tính chất bất biến hoán vị - coi câu văn như một tập hợp từ không thứ tự), dẫn đến không phân biệt được sự khác nhau về ngữ nghĩa khi đổi chỗ chủ ngữ và tân ngữ.
 3. **Câu 3:** Tại sao các bộ Tokenizer hiện đại của LLM (như BPE hoặc WordPiece) lại sử dụng phương pháp **Subword Tokenization** thay vì Whole-word Tokenization?
-   * *Đáp án:* Để giữ kích thước bộ từ điển (Vocabulary) nhỏ gọn trong khi vẫn **xử lý được các từ hiếm, từ ghép phức tạp hoặc từ mới chưa từng gặp mà không bị lỗi Out-of-Vocabulary (OOV)** thông qua việc ghép các mảnh tiền tố, gốc từ và hậu tố.
-4. **Câu 4:** Một công ty truyền thông muốn xây dựng một công cụ tự động phân loại hàng triệu bình luận của độc giả thành 3 nhãn: *Tích cực, Tiêu cực, Trung lập* (Sentiment Analysis), đồng thời trích xuất tên các nhân vật và địa danh được nhắc đến trong bài báo (NER). Biến thể kiến trúc Transformer nào là phù hợp và hiệu quả nhất?
-   * *Đáp án:* **Encoder-only (như BERT, RoBERTa)** vì cơ chế Bidirectional Self-Attention đọc hiểu toàn bộ ngữ cảnh hai chiều trái-phải cùng lúc, tối ưu cho các bài toán hiểu và phân tích ngôn ngữ (NLU).
-5. **Câu 5:** Trong công thức Scaled Dot-Product Attention $\text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V$, tại sao tích vô hướng $QK^T$ lại phải được chia cho $\sqrt{d_k}$ trước khi đưa vào hàm Softmax?
-   * *Đáp án:* Để **ngăn chặn tích vô hướng $QK^T$ phình quá lớn khi số chiều $d_k$ cao**, tránh đẩy hàm Softmax vào vùng bão hòa có đạo hàm cực nhỏ gây ra hiện tượng **triệt tiêu đạo hàm (Vanishing Gradients)**.
-6. **Câu 6:** Một mô hình sử dụng kiến trúc **Mixture of Experts (MoE)** như Mixtral 8x7B có tổng cộng 47 tỷ tham số nhưng tốc độ suy luận lại nhanh tương đương một mô hình 13 tỷ tham số. Cơ chế nào giúp đạt được điều này?
-   * *Đáp án:* Nhờ một **Mạng định tuyến (Router / Gating Network)** chỉ chọn kích hoạt một số ít chuyên gia (**Top-K Experts**, ví dụ 2 trên 8 mạng FFN) cho mỗi token thay vì bắt mọi token phải tính toán qua toàn bộ 100% tham số của mạng.
+   * *Đáp án:* Để giữ kích thước bộ từ điển (Vocabulary) hợp lý trong khi **giảm đáng kể vấn đề Out-of-Vocabulary (OOV)** đối với các từ hiếm, từ ghép phức tạp hoặc từ mới thông qua việc tách và ghép các mảnh từ con (và có thể kết hợp byte-level fallback để bao phủ rộng hơn tùy thiết kế tokenizer).
+4. **Câu 4:** Một công ty truyền thông muốn xây dựng một công cụ tự động phân loại hàng triệu bình luận của độc giả thành 3 nhãn: *Tích cực, Tiêu cực, Trung lập* (Sentiment Analysis), đồng thời trích xuất tên các nhân vật và địa danh được nhắc đến trong bài báo (NER). Biến thể kiến trúc Transformer nào là phù hợp và hiệu quả về mặt chi phí tính toán nhất?
+   * *Đáp án:* **Encoder-only (như BERT, RoBERTa)** vì cơ chế Bidirectional Self-Attention đọc hiểu ngữ cảnh hai chiều trái-phải cùng lúc, rất hiệu quả cho các bài toán hiểu và phân tích ngôn ngữ (NLU).
+5. **Câu 5:** Trong công thức Scaled Dot-Product Attention $\text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V$, tại sao tích vô hướng $QK^T$ lại được chia cho $\sqrt{d_k}$ trước khi đưa vào hàm Softmax?
+   * *Đáp án:* Để **giữ phương sai của tích vô hướng $QK^T$ không phình quá lớn khi số chiều $d_k$ cao**, tránh đẩy hàm Softmax vào vùng bão hòa có đạo hàm rất nhỏ gây ra hiện tượng **triệt tiêu đạo hàm (Vanishing Gradients)**.
+6. **Câu 6:** Một mô hình sử dụng kiến trúc **Mixture of Experts (MoE)** như Mixtral 8x7B có tổng cộng khoảng 47 tỷ tham số nhưng chi phí tính toán FLOPs trên mỗi token lại tương đương một mô hình ~13 tỷ tham số. Cơ chế nào giúp đạt được điều này?
+   * *Đáp án:* Nhờ một **Mạng định tuyến (Router / Gating Network)** chỉ chọn kích hoạt một số ít chuyên gia (**Top-K Experts**, ví dụ 2 trên 8 mạng FFN) cho mỗi token thay vì tính toán qua toàn bộ các mạng FFN của mô hình.

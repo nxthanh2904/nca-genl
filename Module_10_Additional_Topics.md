@@ -30,9 +30,9 @@ flowchart LR
 * **Vai trò của Trọng số ($w_i$ - Weights) và Độ lệch ($b$ - Bias):**
   * **Weights ($w_i$):** Quyết định **mức độ quan trọng (cường độ ảnh hưởng)** của từng đặc trưng đầu vào $x_i$ (nếu $w_i > 0$ là kích thích, $w_i < 0$ là ức chế, $w_i = 0$ là bỏ qua hoàn toàn đặc trưng đó).
   * **Bias ($b$):** Hằng số dịch chuyển ngưỡng kích hoạt (giúp đường thẳng $z = wx + b$ không bị ép phải đi qua gốc tọa độ $(0,0)$).
-* **Câu hỏi bản chất: Tại sao bắt buộc phải có Hàm kích hoạt phi tuyến (Non-linear Activation Function)?**
-  * Nếu bỏ hàm kích hoạt phi tuyến đi (hoặc chỉ dùng hàm tuyến tính $f(z) = z$), thì dù bạn có xếp chồng $1.000$ tầng ẩn liên tiếp nhau, tích của $1.000$ phép nhân ma trận tuyến tính $W_{1000}(\dots(W_2(W_1 x + b_1) + b_2)\dots)$ theo đại số tuyến tính vẫn **suy biến thành đúng 1 phép nhân ma trận tuyến tính đơn giản duy nhất ($y = W_{\text{total}}x + b_{\text{total}}$ — tức tương đương mạng 1 lớp không có tầng ẩn)**!
-  * Chính các **Hàm kích hoạt phi tuyến (Non-linearities)** mới giúp mạng nơ-ron sâu có khả năng "uốn cong" không gian để xấp xỉ bất kỳ hàm toán học phức tạp nào trên đời (**Định lý Xấp xỉ Vạn năng - Universal Approximation Theorem**) như nhận diện khuôn mặt, giọng nói hay hiểu ngôn ngữ tự nhiên!
+* **Câu hỏi bản chất: Tại sao cần có Hàm kích hoạt phi tuyến (Non-linear Activation Function)?**
+  * Nếu bỏ hàm kích hoạt phi tuyến đi (hoặc chỉ dùng hàm tuyến tính $f(z) = z$), thì dù có xếp chồng nhiều tầng tuyến tính liên tiếp nhau, tích của các phép nhân ma trận tuyến tính $W_{N}(\dots(W_2(W_1 x + b_1) + b_2)\dots)$ theo đại số tuyến tính vẫn **rút gọn thành một phép biến đổi tuyến tính duy nhất ($y = W_{\text{total}}x + b_{\text{total}}$ — tương đương mạng 1 lớp không có tầng ẩn)**!
+  * Chính các **Hàm kích hoạt phi tuyến (Non-linearities)** mới giúp mạng nơ-ron sâu có khả năng biểu diễn các mối quan hệ phi tuyến phức tạp (**Định lý Xấp xỉ Vạn năng - Universal Approximation Theorem**) như nhận diện hình ảnh, giọng nói hay hiểu ngôn ngữ tự nhiên.
 
 ---
 
@@ -106,7 +106,7 @@ Trong đề thi NCA-GENL, bạn cần phân biệt rõ khi nào dùng hàm kích
 | **2. Leaky ReLU / GELU / SwiGLU** | • Leaky ReLU: $\max(0.01x, x)$<br/>• **GELU / SwiGLU**: Biến thể mượt của ReLU | $(-\infty, +\infty)$ | • Khắc phục hiện tượng *Dying ReLU* bằng cách cho phép một lượng nhỏ đạo hàm ở miền âm.<br/>• **GELU** và **SwiGLU** là **hàm kích hoạt chuẩn bên trong khối FFN của mọi LLM hiện đại** (GPT-4, BERT, LLaMA-3, Mistral)! |
 | **3. Sigmoid (Logistic)** | $$\sigma(x) = \frac{1}{1 + e^{-x}}$$ *(Đường cong chữ S)* | $(0, 1)$ | • **Nhược:** Tính hàm mũ $e^{-x}$ chậm, đầu ra không đối xứng qua $0$, **gây Vanishing Gradient nặng nề nếu đặt ở tầng ẩn**.<br/>• **Vị trí:** Chỉ dùng ở **Tầng đầu ra (Output Layer) cho bài toán Phân loại Nhị phân (Binary Classification)** để biểu diễn xác suất Đúng/Sai từ $0$ đến $1$. |
 | **4. Tanh (Hyperbolic Tangent)** | $$\tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}$$ | $(-1, 1)$ | • Đối xứng qua tâm $0$ (Zero-centered) nên tốt hơn Sigmoid, dùng trong các cổng của LSTM, nhưng vẫn bị Vanishing Gradient ở hai đầu bão hòa. |
-| **5. Softmax** | $$\text{softmax}(z_i) = \frac{e^{z_i}}{\sum_{j=1}^K e^{z_j}}$$ | $(0, 1)$ và $\sum P_i = 1.0$ | • Biến một vector điểm số thô (**Logits**) thành một **Phân phối xác suất chuẩn** (tổng tất cả các lớp bằng đúng $100\%$).<br/>• **Vị trí:** Bắt buộc đặt ở **Tầng đầu ra (Output Layer) của bài toán Phân loại Đa lớp (Multi-class)**, đầu ra dự đoán từ vựng của **LLM** và bên trong công thức **Self-Attention**! |
+| **5. Softmax** | $$\text{softmax}(z_i) = \frac{e^{z_i}}{\sum_{j=1}^K e^{z_j}}$$ | $(0, 1)$ và $\sum P_i = 1.0$ | • Biến một vector điểm số thô (**Logits**) thành một **Phân phối xác suất chuẩn** (tổng xác suất các lớp bằng $1.0$).<br/>• **Vị trí:** Thường đặt ở **Tầng đầu ra (Output Layer) của bài toán Phân loại Đa lớp (Multi-class)**, đầu ra dự đoán từ vựng của **LLM** và bên trong công thức **Self-Attention**! |
 
 ---
 
@@ -119,13 +119,13 @@ Trong đề thi NCA-GENL, bạn cần phân biệt rõ khi nào dùng hàm kích
   Ba học sinh nộp điểm từ 3 trường có thang điểm khác nhau (Trường A chấm thang $50$, Trường B chấm thang $100$, Trường C chấm thang $200$). Nếu cộng gộp điểm thô sẽ gây sai lệch hoàn toàn. Quy đổi toàn bộ điểm số về **thang điểm chuẩn Z-Score ($\mu=0, \sigma=1$)** giúp so sánh công bằng và giữ cho mọi khối **Transformer** hội tụ ổn định.
 * **Phân biệt nhanh BatchNorm vs. LayerNorm (Hay hỏi nâng cao):**
   * **Batch Normalization (BatchNorm):** Chuẩn hóa dọc theo từng cột đặc trưng **qua tất cả các mẫu trong cùng một Mini-batch** $\to$ Phụ thuộc vào kích thước Batch Size, rất phổ biến trong **Mạng thị giác CNN (ResNet)**.
-  * **Layer Normalization (LayerNorm) & RMSNorm:** Chuẩn hóa ngang theo các chiều ẩn của **từng token độc lập** mà hoàn toàn không phụ thuộc vào Batch Size hay độ dài câu $\to$ **Tiêu chuẩn bắt buộc cho mọi kiến trúc Chuỗi / NLP / Transformer / LLM**!
+  * **Layer Normalization (LayerNorm) & RMSNorm:** Chuẩn hóa ngang theo các chiều ẩn của **từng token độc lập** mà không phụ thuộc vào Batch Size hay độ dài câu $\to$ **Tiêu chuẩn rất phổ biến cho các kiến trúc Chuỗi / NLP / Transformer / LLM**!
 
 ### 3.2. Kỹ thuật Dropout (Chống Overfitting)
 * **Cơ chế hoạt động:** Trong suốt quá trình **Training (Huấn luyện)**, ở mỗi bước lặp, lớp **Dropout** sẽ **ngẫu nhiên tắt (gán giá trị bằng $0$) một tỷ lệ $p\%$ các nơ-ron** trong tầng (ví dụ `Dropout rate p = 0.1` hoặc `0.2`, tức tắt ngẫu nhiên 10–20% nơ-ron).
 * **Phép ẩn dụ Đội bóng / Công ty:** Nếu trong một nhóm làm việc có 1 ngôi sao quá giỏi, các thành viên khác sẽ ỷ lại ngồi chơi. Nếu mỗi ngày quản lý ngẫu nhiên cho 20% nhân viên nghỉ phép, tất cả các nhân viên còn lại bắt buộc phải tự rèn luyện kỹ năng đa năng để gánh vác công việc!
 * **Tác dụng:** Ngăn chặn hiện tượng các nơ-ron phụ thuộc đồng bộ mù quáng vào nhau (**Co-adaptation**) để học thuộc lòng nhiễu của tập Train, buộc mạng nơ-ron học các biểu diễn đặc trưng phân tán và vững chắc hơn $\to$ **Giảm thiểu Overfitting cực kỳ hiệu quả!**
-* **Lưu ý sống còn khi đi thi:** **Dropout CHỈ BẬT trong lúc `Training` (`model.train()`)**; khi chuyển sang chạy **Suy luận thực tế `Inference / Evaluation` (`model.eval()`), Dropout BẮT BUỘC PHẢI TẮT ĐI** để sử dụng 100% toàn bộ nơ-ron của mạng nhằm cho ra dự đoán ổn định và chính xác nhất!
+* **Lưu ý quan trọng khi kiểm thử và suy luận:** **Dropout thường chỉ kích hoạt trong lúc `Training` (`model.train()`)**; khi chuyển sang chạy **Suy luận / Đánh giá `Inference / Evaluation` (`model.eval()`), cần tắt Dropout** để sử dụng toàn bộ các nơ-ron của mạng nhằm cho ra dự đoán ổn định và nhất quán (trừ trường hợp đặc biệt khi chủ đích dùng kỹ thuật *Monte Carlo Dropout* để ước lượng độ bất định).
 
 ---
 

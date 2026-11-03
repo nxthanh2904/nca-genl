@@ -19,7 +19,7 @@ Ngược lại, **AI-Centric Data Center (AI Factory)** giải quyết một bà
 * **Thông lượng I/O dữ liệu cực cao (High I/O Throughput):** Hệ thống lưu trữ phải "bơm" hàng Terabyte dữ liệu liên tục vào VRAM của GPU. Nếu ổ cứng hoặc mạng đọc chậm, dàn GPU triệu đô sẽ rơi vào trạng thái chờ rỗi (**GPU Starvation / I/O Bottleneck**).
 * **Mật độ điện năng và Tản nhiệt cực hạn (Power & Cooling Density):**
   * *Rack truyền thống (CPU):* Tiêu thụ khoảng **5 – 15 kW/rack**, làm mát bằng điều hòa không khí (Air Cooling) thông thường.
-  * *Rack AI hiện đại (DGX H100 / GB200 NVL72):* Tiêu thụ từ **40 kW đến hơn 120 kW/rack**! Ở mật độ này, quạt gió không thể tải nhiệt kịp mà bắt buộc phải dùng **Tản nhiệt chất lỏng trực tiếp lên chip (Direct-to-Chip Liquid Cooling)** hoặc tản nhiệt ngâm (Immersion Cooling) để tối ưu chỉ số hiệu quả sử dụng năng lượng (**PUE - Power Usage Effectiveness**).
+  * *Rack AI hiện đại (DGX H100 / GB200 NVL72):* Tiêu thụ từ **40 kW đến hơn 120 kW/rack**! Ở mật độ nhiệt này, làm mát bằng khí thông thường thường không đáp ứng đủ mà cần kết hợp **Tản nhiệt chất lỏng trực tiếp lên chip (Direct-to-Chip Liquid Cooling)** hoặc tản nhiệt ngâm (Immersion Cooling) để tối ưu chỉ số hiệu quả sử dụng năng lượng (**PUE - Power Usage Effectiveness**).
 
 | Tiêu chí so sánh | Data Center Truyền thống (General IT / Web) | AI Data Center (AI Factory / HPC) |
 | :--- | :--- | :--- |
@@ -50,7 +50,7 @@ flowchart TD
   * **Kubernetes (K8s) + NVIDIA GPU Operator:** Nền tảng điều phối container tiêu chuẩn cho các dịch vụ **Microservices, Inference Serving (Triton/NIM)** cần tự động co giãn (Auto-scaling), cân bằng tải (Load Balancing) và tự phục hồi (Self-healing) 24/7.
 
 ### 1.3. Bốn trụ cột cơ bản của Hạ tầng AI (4 Pillars of AI Infrastructure)
-Để lớp thứ 5 (**AI Infrastructure**) vận hành trơn tru, nó bắt buộc phải đứng vững trên 4 trụ cột (chỉ cần 1 trụ cột yếu sẽ tạo thành điểm nghẽn cho cả hệ thống):
+Để lớp thứ 5 (**AI Infrastructure**) vận hành trơn tru, nó cần đứng vững trên 4 trụ cột (chỉ cần 1 trụ cột yếu sẽ tạo thành điểm nghẽn cho cả hệ thống):
 
 ```mermaid
 flowchart LR
@@ -85,7 +85,7 @@ flowchart LR
     T1 --> T2 --> T3 --> T4 --> T5 --> T6
 ```
 
-### Phân tích các cột mốc lịch sử (Hay hỏi trong đề thi):
+### Phân tích các cột mốc lịch sử (Khái niệm đáng ôn theo Blueprint):
 1. **Giai đoạn Đồ họa 3D (1996 – 2004):**
    * **Quake (1996):** Đánh dấu sự khởi đầu của việc dùng card tăng tốc đồ họa 3D rời.
    * **NVIDIA GeForce 256 (1999):** Chiếc card đồ họa đầu tiên trên thế giới chính thức được NVIDIA định nghĩa là **"GPU" (Graphics Processing Unit)**, tích hợp sẵn phần cứng chuyển đổi tọa độ và ánh sáng (**Hardware T&L** - Transform and Lighting) trực tiếp trên chip thay vì bắt CPU tính.
@@ -163,7 +163,10 @@ Một câu hỏi rất phổ biến trong kỳ thi là sự khác biệt giữa 
 | **`FP32` (Single Precision)** | 32-bit | $1\text{ (Dấu)} + 8\text{ (Mũ)} + 23\text{ (Định trị)}$ | Độ chính xác chuẩn truyền thống (4 bytes/tham số). Rất chính xác nhưng tốn VRAM và băng thông bộ nhớ. |
 | **`TF32` (TensorFloat-32)** | 19-bit | $1\text{ (Dấu)} + 8\text{ (Mũ)} + 10\text{ (Định trị)}$ | Định dạng đặc biệt trên Tensor Cores của NVIDIA (từ Ampere A100): giữ **miền giá trị (8-bit mũ) giống hệt FP32** kết hợp độ chính xác của FP16, tự động tăng tốc phép nhân ma trận FP32 lên gấp nhiều lần mà không cần sửa code! |
 | **`FP16` (Half Precision)** | 16-bit | $1\text{ (Dấu)} + 5\text{ (Mũ)} + 10\text{ (Định trị)}$ | Giảm 50% VRAM (2 bytes/tham số). Tuy nhiên vì chỉ có **5-bit số mũ** nên miền giá trị hẹp ($\pm 65,504$), dễ bị tràn số (**Overflow/Underflow**) khi tính Gradient, cần dùng kèm kỹ thuật **Loss Scaling**. |
-| **`BF16` (Bfloat16 - Brain Float)** | 16-bit | $1\text{ (Dấu)} + \mathbf{8\text{ (Mũ)}} + 7\text{ (Định trị)}$ | **Chuẩn VÀNG để Pre-train và Fine-tune LLM hiện nay!** Giữ nguyên **8-bit phần mũ giống hệt `FP32`** nên dải động (Dynamic Range) cực rộng, **không bao giờ sợ tràn số (Overflow)** khi huấn luyện mạng sâu, dù phần lẻ ít bit hơn FP16. |
+| **`BF16` (Bfloat16 - Brain Float)** | 16-bit | $1\text{ (Dấu)} + \mathbf{8\text{ (Mũ)}} + 7\text{ (Định trị)}$ | **Định dạng phổ biến để Pre-train và Fine-tune LLM hiện nay.** `BF16` dùng 1 bit dấu, 8 bit số mũ và 7 bit phần trị. Nhờ số bit mũ bằng `FP32`, `BF16` giữ được dải động (Dynamic Range) rộng hơn `FP16`, thường giảm nhu cầu loss scaling trong mixed-precision training. Tuy nhiên, `BF16` **không loại bỏ hoàn toàn overflow/underflow** và có độ chính xác phần trị (mantissa precision) thấp hơn `FP16`. |
+
+> [!NOTE]
+> **Gợi ý ôn tập (`FP16` vs. `BF16`):** `FP16` có độ chính xác phần trị (mantissa) cao hơn (10-bit vs. 7-bit), trong khi `BF16` có dải động (dynamic range) rộng hơn nhờ 8-bit số mũ giống `FP32`.
 | **`FP8` (8-bit Floating Point)** | 8-bit | `E4M3` (4 mũ, 3 lẻ) hoặc `E5M2` (5 mũ, 2 lẻ) | Được quản lý tự động bởi **Transformer Engine** trên GPU **Hopper (H100)** và **Blackwell (B200)**: dùng `E4M3` (chính xác hơn) cho Forward Pass/Inference và `E5M2` (dải rộng hơn) cho Backward Gradients, tăng tốc gấp đôi so với 16-bit! |
 | **`INT8` / `INT4` (Integer)** | 8 / 4-bit | Số nguyên lượng tử hóa | Chuyên dùng cho **Suy luận (Inference Quantization - PTQ/AWQ/GPTQ)** hoặc nén mô hình gốc trong **QLoRA (`NF4`)**, giúp giảm 4x–8x dung lượng VRAM so với FP32. |
 
@@ -181,8 +184,8 @@ Một câu hỏi rất phổ biến trong kỳ thi là sự khác biệt giữa 
 
 Trong kiến trúc máy tính, CPU dùng **System RAM**, còn GPU dùng **VRAM** riêng biệt. Việc truyền dữ liệu qua lại giữa RAM và VRAM thông qua bus **PCIe** là một điểm nghẽn cổ chai (bottleneck) kinh điển.
 
-* **Góc nhìn Developer:** Để truyền dữ liệu từ System RAM sang GPU VRAM bằng cơ chế **DMA (Direct Memory Access)**, hệ điều hành không thể đọc trực tiếp từ bộ nhớ ảo phân trang thông thường (Pageable Memory - có thể bị swap ra đĩa cứng bất cứ lúc nào), mà bắt buộc phải cấp phát một vùng nhớ vật lý cố định không bị swap gọi là **Pinned Memory (Page-Locked Memory)**.
-* Tuy nhiên, thao tác gọi hệ điều hành cấp phát và khóa trang nhớ (`cudaMallocHost` / `pin_memory`) rồi lại giải phóng (`cudaFreeHost`) tốn rất nhiều chu kỳ CPU. Kỹ thuật **Memory Pooling** giống hệt như **Database Connection Pooling** trong lập trình backend — ta khởi tạo và khóa sẵn một **Memory Pool cố định** một lần duy nhất lúc khởi động ứng dụng và tái sử dụng liên tục!
+* **Góc nhìn Developer:** CUDA có thể truyền dữ liệu giữa host (System RAM) và device (GPU VRAM) từ cả **pageable memory** (bộ nhớ ảo phân trang thông thường) lẫn **page-locked / pinned memory** (vùng nhớ vật lý được khóa không bị swap ra ổ đĩa). Với pageable memory, driver thường phải thực hiện thêm bước sao chép tạm (staging) qua một vùng đệm pinned nội bộ trước khi DMA. Việc sử dụng **Pinned Memory** giúp tránh bước staging phụ này, thường cần thiết để `cudaMemcpyAsync` thực sự chạy bất đồng bộ (asynchronous) và cải thiện thông lượng truyền qua PCIe. Tuy nhiên, **không phải mọi thao tác host-to-device copy đều bắt buộc lập trình viên phải tự cấp phát pinned memory**, và lạm dụng pinned memory quá mức có thể làm giảm dung lượng RAM vật lý còn lại cho hệ điều hành (Tham khảo: [NVIDIA CUDA C++ Programming Guide](https://docs.nvidia.com/cuda/cuda-c-programming-guide/)).
+* Ngoài ra, thao tác gọi hệ điều hành cấp phát và khóa trang nhớ (`cudaMallocHost` / `pin_memory`) rồi lại giải phóng (`cudaFreeHost`) lặp đi lặp lại tốn nhiều chu kỳ CPU. Kỹ thuật **Memory Pooling** giống như **Database Connection Pooling** trong lập trình backend — ta khởi tạo sẵn một **Memory Pool** một lần lúc khởi động ứng dụng và tái sử dụng liên tục để giảm chi phí cấp phát!
 
 ```mermaid
 sequenceDiagram
@@ -213,10 +216,10 @@ sequenceDiagram
 
 ## 4. Hạ tầng Mạng & Các Chiến lược Huấn luyện Song song (Distributed Training)
 
-Khi một mô hình LLM có 70 tỷ hay 405 tỷ tham số, nó không thể nằm vừa trong VRAM của 1 chiếc GPU (ví dụ H100 có 80GB VRAM). Ta bắt buộc phải chia nhỏ công việc ra hàng chục, hàng trăm GPU (gọi là **3D Parallelism**).
+Khi một mô hình LLM có 70 tỷ hay 405 tỷ tham số ở độ chính xác 16-bit, nó không thể nằm vừa trong VRAM của 1 chiếc GPU đơn lẻ (ví dụ H100 80GB VRAM). Khi đó, kỹ sư thường kết hợp các chiến lược chia nhỏ công việc ra nhiều GPU (gọi là **3D Parallelism**).
 
 ### 4.1. Ba Chiến lược Song song hóa trong Huấn luyện AI (3D Parallelism) và ZeRO
-Đề thi NCA-GENL thường hỏi cách phân chia mô hình và dữ liệu qua nhiều GPU:
+Chủ đề liên quan tới cách phân chia mô hình và dữ liệu qua nhiều GPU:
 
 ```mermaid
 flowchart TD
@@ -225,7 +228,7 @@ flowchart TD
     end
 
     subgraph TP["2. Tensor Parallelism (Song song Tensor / Nội tầng - Intra-layer)"]
-        TP_Desc["• Khi 1 tầng (Layer) quá to, CẮT DỌC/NGANG ma trận trọng số<br/>của chính tầng đó chia cho nhiều GPU trong cùng 1 máy<br/>• Các GPU phải trao đổi kết quả ngay giữa phép nhân ma trận<br/>👉 Bắt buộc dùng kết nối siêu tốc nội bộ máy: NVLink / NVSwitch"]
+        TP_Desc["• Khi 1 tầng (Layer) quá to, CẮT DỌC/NGANG ma trận trọng số<br/>của chính tầng đó chia cho nhiều GPU trong cùng 1 máy<br/>• Các GPU phải trao đổi kết quả ngay giữa phép nhân ma trận<br/>👉 Thường ưu tiên kết nối băng thông cao nội bộ máy: NVLink / NVSwitch"]
     end
 
     subgraph PP["3. Pipeline Parallelism (Song song Đường ống / Liên tầng - Inter-layer)"]
@@ -236,7 +239,7 @@ flowchart TD
 | Chiến lược song song | Cắt cái gì? | Khi nào sử dụng? | Yêu cầu băng thông mạng |
 | :--- | :--- | :--- | :--- |
 | **1. Data Parallelism (DP / DDP)** | Cắt **Dữ liệu (Mini-batch)**; giữ nguyên bản sao mô hình trên mỗi GPU. | Mô hình nhỏ/vừa đủ nằm trong 1 GPU, muốn dùng nhiều GPU để đọc hết tập dữ liệu nhanh hơn. | Trung bình – Cao (Đồng bộ Gradient bằng `All-Reduce` ở cuối mỗi step). |
-| **2. Tensor Parallelism (TP)** | Cắt **Ma trận trọng số bên trong cùng 1 Layer** (Intra-layer) ra nhiều mảnh. | Một tầng đơn lẻ hoặc mô hình quá lớn không vừa 1 GPU; dùng cho các GPU **trong cùng 1 Node** (thường TP = 2, 4, hoặc 8). | **Cực kỳ cao và độ trễ cực thấp** $\to$ Bắt buộc chạy qua **NVLink / NVSwitch**. |
+| **2. Tensor Parallelism (TP)** | Cắt **Ma trận trọng số bên trong cùng 1 Layer** (Intra-layer) ra nhiều mảnh. | Một tầng đơn lẻ hoặc mô hình quá lớn không vừa 1 GPU; thường dùng cho các GPU **trong cùng 1 Node** (TP = 2, 4, hoặc 8). | **Rất cao và độ trễ cực thấp** $\to$ Thường chạy qua **NVLink / NVSwitch**. |
 | **3. Pipeline Parallelism (PP)** | Cắt **Các tầng (Layers) nối tiếp nhau** (Inter-layer) qua nhiều GPU/Node. | Mô hình cực lớn cần trải dài qua **nhiều máy chủ (Multi-node)** khác nhau. | Thấp hơn TP (chỉ truyền Activations của tầng biên qua mạng **InfiniBand**). |
 | **4. ZeRO (Zero Redundancy Optimizer) / FSDP** | Phân mảnh (Shard) **Trạng thái Optimizer (Stage 1), Gradients (Stage 2) và Weights (Stage 3)** qua các GPU Data-Parallel. | Loại bỏ sự trùng lặp bộ nhớ của Data Parallelism truyền thống, giúp train mô hình lớn với hiệu suất sử dụng VRAM tối đa. | Cao (cần gọi `All-Gather` và `Reduce-Scatter` qua thư viện **NCCL**). |
 
@@ -251,7 +254,7 @@ flowchart TD
      * **Ethernet truyền thống (TCP/IP):** Thiết kế kiểu "Best-effort", kiểm soát gói tin qua ngăn xếp TCP/IP của hệ điều hành gây **overhead CPU cao**, **độ trễ lớn**, dễ xảy ra nghẽn cổ chai (packet drop) khi hàng trăm máy chủ bắn dữ liệu cùng một mili-giây (hiện tượng *Incast congestion*).
      * **NVIDIA Quantum InfiniBand:** Chuẩn mạng chuyên dụng cho HPC và AI Factory với băng thông **400Gbps (NDR) – 800Gbps (XDR)/cổng**, cơ chế kiểm soát luồng phần cứng đảm bảo **không rớt gói tin (Lossless network)**, định tuyến thích ứng (Adaptive Routing) và tính toán gộp dữ liệu ngay trên thiết bị chuyển mạch (**SHARP** - Scalable Hierarchical Aggregation and Reduction Protocol).
      * **NVIDIA Spectrum-X:** Nền tảng Ethernet được NVIDIA thiết kế lại chuyên biệt cho AI (kết hợp Switch Spectrum-4 và SmartNIC/SuperNIC **BlueField-3 DPU**), mang lại hiệu năng RoCE (RDMA over Converged Ethernet) tiệm cận InfiniBand cho các trung tâm dữ liệu chuẩn Ethernet.
-   * **Công nghệ RDMA & GPUDirect RDMA:** Cho phép **GPU ở máy chủ A đọc/ghi trực tiếp vào VRAM của GPU ở máy chủ B** qua card mạng InfiniBand/RoCE mà **không cần thông qua CPU hay System RAM của cả hai máy**, giảm độ trễ xuống mức **micro-giây ($\mu s$)** và giải phóng CPU 100%.
+   * **Công nghệ RDMA & GPUDirect RDMA:** Cho phép **GPU ở máy chủ A đọc/ghi trực tiếp vào VRAM của GPU ở máy chủ B** qua card mạng InfiniBand/RoCE mà **không cần sao chép qua vùng đệm System RAM của CPU trên đường truyền dữ liệu**, giảm độ trễ xuống mức **micro-giây ($\mu s$)** và giảm đáng kể tải cho CPU.
 
 ```mermaid
 flowchart TD
@@ -295,11 +298,11 @@ flowchart LR
 | **4. Object Storage (AWS S3, GCS, Azure Blob, Ceph, MinIO)** | Lưu trữ đối tượng phẳng theo cơ chế Bucket (giao tiếp qua HTTP/REST API); dung lượng mở rộng vô hạn (Exabytes), độ bền cao, chi phí cực rẻ nhưng độ trễ cao (mili-giây). | Lưu trữ **Cold/Warm Data**: Kho dữ liệu thô chưa xử lý (Raw Data Lake), bản sao lưu (Backups), lịch sử Checkpoint dài hạn, logs. |
 
 ### 5.2. Kiến trúc lưu trữ phân tầng (Tiered Storage), Định dạng File & GPUDirect Storage (GDS)
-* **Hot Data (Dữ liệu nóng):** Dữ liệu đang trực tiếp tham gia vào vòng lặp huấn luyện $\to$ Bắt buộc nằm trên **NVMe SSD** hoặc **Parallel File System**.
-* **Mẹo tối ưu I/O cho Developer AI:** Đọc hàng triệu file ảnh/text nhỏ lẻ (`small random I/O`) trên ổ cứng sẽ làm tụt hiệu năng nghiêm trọng vì overhead mở/đóng file (metadata operations). Thực tế sản xuất luôn đóng gói hàng triệu mẫu nhỏ thành các tệp tuần tự kích thước lớn (**Large Sequential Shards**) như **Apache Parquet, WebDataset (`.tar`), TFRecord, hoặc `.safetensors`** (hỗ trợ memory-map `mmap` nạp thẳng vào bộ nhớ cực nhanh).
+* **Hot Data (Dữ liệu nóng):** Dữ liệu đang trực tiếp tham gia vào vòng lặp huấn luyện $\to$ Thường đặt trên **NVMe SSD** hoặc **Parallel File System**.
+* **Mẹo tối ưu I/O cho Developer AI:** Đọc hàng triệu file ảnh/text nhỏ lẻ (`small random I/O`) trên ổ cứng sẽ làm tụt hiệu năng nghiêm trọng vì overhead mở/đóng file (metadata operations). Thực tế sản xuất thường đóng gói hàng triệu mẫu nhỏ thành các tệp tuần tự kích thước lớn (**Large Sequential Shards**) như **Apache Parquet, WebDataset (`.tar`), TFRecord, hoặc `.safetensors`** (hỗ trợ memory-map `mmap` nạp thẳng vào bộ nhớ nhanh chóng).
 * **Công nghệ NVIDIA GPUDirect Storage (GDS):**
   * *Không có GDS:* Để đọc 1 file từ ổ cứng NVMe hoặc Parallel FS vào GPU, CPU phải đọc file đó vào vùng đệm System RAM (**CPU Bounce Buffer**) rồi mới copy qua PCIe sang VRAM của GPU $\to$ Tốn băng thông RAM, tốn CPU và tăng độ trễ.
-  * *Có GDS:* Mở một đường truyền **DMA (Direct Memory Access) thẳng từ ổ cứng NVMe / hệ thống lưu trữ mạng vào thẳng VRAM của GPU**, bỏ qua hoàn toàn CPU Bounce Buffer, giải phóng CPU và tăng băng thông đọc/ghi dữ liệu lên gấp 2–8 lần!
+  * *Có GDS:* Mở một đường truyền **DMA (Direct Memory Access) thẳng từ ổ cứng NVMe / hệ thống lưu trữ mạng vào thẳng VRAM của GPU**, bỏ qua CPU Bounce Buffer, giảm tải cho CPU và cải thiện đáng kể thông lượng đọc/ghi dữ liệu (tùy thuộc vào phần cứng lưu trữ, cấu hình PCIe và kích thước I/O).
 * **Warm / Cold Data (Dữ liệu ấm / lạnh):** Dữ liệu lịch sử, checkpoint của các epoch cũ, raw data chưa làm sạch $\to$ Đẩy về **Object Storage** để tối ưu hóa chi phí.
 
 ---
@@ -308,42 +311,42 @@ flowchart LR
 
 | Tiêu chí so sánh | Cloud Infrastructure (AWS, Azure, GCP, OCI, CoreWeave) | On-Premise Infrastructure (DGX SuperPOD tại chỗ) | Hybrid / Multi-Cloud (Mô hình Lai) |
 | :--- | :--- | :--- | :--- |
-| **Mô hình chi phí (Cost Model)** | **OpEx (Operating Expense - Chi phí vận hành):** Trả tiền theo mức sử dụng (Pay-as-you-go theo giờ/phút), không tốn vốn mua máy ban đầu. | **CapEx (Capital Expense - Chi phí đầu tư vốn):** Đầu tư ban đầu cực lớn (mua server, bản quyền, xây phòng lạnh, trạm biến áp). | Kết hợp cả **CapEx** (cho tải nền ổn định) và **OpEx** (thuê thêm Cloud khi tải tăng đột biến - **Cloud Bursting**). |
-| **Khả năng mở rộng (Scalability)** | **Cực kỳ linh hoạt (Elastic):** Thuê thêm 100 GPU trong vài phút khi cần train, tắt đi ngay khi xong việc. | **Giới hạn cứng:** Phụ thuộc vào số lượng máy vật lý đã mua; muốn nâng cấp phải chờ đặt hàng và lắp đặt hàng tháng trời. | Linh hoạt: Chạy inference hàng ngày tại chỗ, khi cần pre-train mô hình lớn thì đẩy job lên Cloud. |
-| **Bảo mật & Chủ quyền dữ liệu (Data Sovereignty)** | Phụ thuộc vào chính sách bảo mật của nhà cung cấp Cloud (cần dùng thêm *Confidential Computing* nếu dữ liệu nhạy cảm). | **Kiểm soát tuyệt đối 100%:** Dữ liệu nằm hoàn toàn bên trong tường lửa vật lý của doanh nghiệp (Air-gapped), đáp ứng chuẩn pháp lý khắt khe nhất. | Giữ dữ liệu nhạy cảm (PII, bệnh án, tài chính) ở On-Premise; xử lý dữ liệu công khai trên Cloud. |
-| **Bảo trì & Vận hành (Maintenance)** | Nhà cung cấp Cloud lo toàn bộ việc thay phần cứng hỏng, nâng cấp mạng, duy trì SLA. | Doanh nghiệp phải tự thuê đội ngũ kỹ sư Data Center trực 24/7 để vận hành, làm mát và sửa chữa phần cứng. | Đòi hỏi công cụ quản trị đồng nhất (như Kubernetes, NVIDIA Base Command, NIM) để điều phối cả hai môi trường. |
-| **Khi nào nên chọn?** | **Startup, R&D ban đầu**, dự án ngắn hạn, tải công việc biến động mạnh (Spiky workloads) hoặc cần thử nghiệm nhanh. | **Doanh nghiệp lớn, Ngân hàng, Y tế, Quốc phòng** có dữ liệu tối mật và tải công việc AI chạy liên tục 24/7 ổn định (tối ưu TCO sau 2-3 năm). | Doanh nghiệp vừa và lớn muốn cân bằng giữa bảo mật dữ liệu cốt lõi và sự linh hoạt mở rộng. |
+| **Mô hình chi phí (Cost Model)** | **OpEx (Operating Expense - Chi phí vận hành):** Trả tiền theo mức sử dụng (Pay-as-you-go theo giờ/phút), không tốn vốn mua máy ban đầu. | **CapEx (Capital Expense - Chi phí đầu tư vốn):** Đầu tư ban đầu lớn (mua server, bản quyền, xây phòng lạnh, trạm biến áp). | Kết hợp cả **CapEx** (cho tải nền ổn định) và **OpEx** (thuê thêm Cloud khi tải tăng đột biến - **Cloud Bursting**). |
+| **Khả năng mở rộng (Scalability)** | **Rất linh hoạt (Elastic):** Thuê thêm nhiều GPU nhanh chóng khi cần train, tắt đi ngay khi xong việc. | **Giới hạn theo phần cứng hiện có:** Phụ thuộc vào số lượng máy vật lý đã mua; muốn nâng cấp cần thời gian đặt hàng và lắp đặt. | Linh hoạt: Chạy inference hàng ngày tại chỗ, khi cần pre-train mô hình lớn hoặc vượt tải thì đẩy job lên Cloud. |
+| **Bảo mật & Chủ quyền dữ liệu (Data Sovereignty)** | Phụ thuộc vào mô hình trách nhiệm chung (Shared Responsibility Model) và cấu hình bảo mật trên Cloud (có thể kết hợp *Confidential Computing* để bảo vệ dữ liệu *in use*). | **Quyền kiểm soát trực tiếp cao:** Doanh nghiệp tự quản lý hạ tầng vật lý và mạng nội bộ (có thể thiết kế cách ly mạng / *air-gapped* nếu cần). Tuy nhiên, **đặt máy tại chỗ (on-premises) không tự động đồng nghĩa với air-gapped hay bảo mật tuyệt đối** nếu thiếu kiểm soát truy cập, phân vùng mạng, vá lỗi và giám sát an ninh. | Giữ dữ liệu nhạy cảm (PII, bệnh án, tài chính) ở On-Premise; xử lý dữ liệu công khai hoặc tải tính toán không nhạy cảm trên Cloud. |
+| **Bảo trì & Vận hành (Maintenance)** | Nhà cung cấp Cloud quản lý phần cứng vật lý, mạng cơ sở và duy trì SLA hạ tầng. | Doanh nghiệp cần đội ngũ kỹ sư Data Center để vận hành, cấp nguồn, làm mát và bảo trì phần cứng. | Đòi hỏi công cụ quản trị đồng nhất (như Kubernetes, NVIDIA Base Command, NIM) để điều phối cả hai môi trường. |
+| **Khi nào nên chọn?** | **Startup, R&D ban đầu**, dự án ngắn hạn, tải công việc biến động mạnh (Spiky workloads) hoặc cần thử nghiệm nhanh. | **Doanh nghiệp lớn, Ngân hàng, Y tế, Cơ quan nhà nước** có yêu cầu tuân thủ nghiêm ngặt về nơi lưu trữ dữ liệu và tải công việc AI chạy liên tục 24/7 ổn định. | Doanh nghiệp vừa và lớn muốn cân bằng giữa kiểm soát dữ liệu cốt lõi và sự linh hoạt mở rộng. |
 
 ---
 
-## 7. Bẫy đề thi NCA-GENL & Câu hỏi Thực chiến (Exam Traps & Mini Quiz)
+## 7. Lưu ý Ôn tập & Câu hỏi Luyện tập Minh họa (Review Notes & Practice Quiz)
 
 > [!WARNING]
-> **Các bẫy kinh điển trong đề thi Module 1:**
-> 1. **Bẫy CPU vs. GPU & CUDA vs. Tensor Cores:**
+> **Các điểm dễ nhầm lẫn cần lưu ý ở Module 1:**
+> 1. **Phân biệt CPU vs. GPU & CUDA vs. Tensor Cores:**
 >    * *Low Latency & Sequential Processing (Xử lý tuần tự, logic rẽ nhánh)* $\to$ **CPU**.
 >    * *High Throughput & Parallel Processing (Xử lý song song khối lượng lớn)* $\to$ **GPU**.
 >    * Nhân phần cứng chuyên dụng bên trong GPU NVIDIA để tăng tốc phép nhân ma trận Deep Learning/Transformer với độ chính xác hỗn hợp (`FP16`/`BF16`/`FP8`) $\to$ **Tensor Cores**.
-> 2. **Bẫy GPUDirect RDMA vs. GPUDirect Storage (GDS) vs. NVLink:**
->    * Kết nối siêu tốc giữa các GPU **bên trong cùng 1 máy chủ (Intra-node)** $\to$ **NVLink / NVSwitch**.
->    * Truyền dữ liệu trực tiếp giữa các GPU **ở các máy chủ khác nhau qua mạng (Inter-node)** không qua CPU $\to$ **InfiniBand + GPUDirect RDMA**.
->    * Truyền dữ liệu trực tiếp từ **ổ cứng lưu trữ (NVMe / Parallel Storage) vào thẳng VRAM GPU** không qua CPU Bounce Buffer $\to$ **GPUDirect Storage (GDS)**.
-> 3. **Bẫy 3D Parallelism:**
+> 2. **Phân biệt GPUDirect RDMA vs. GPUDirect Storage (GDS) vs. NVLink:**
+>    * Kết nối băng thông cao giữa các GPU **bên trong cùng 1 máy chủ (Intra-node)** $\to$ **NVLink / NVSwitch**.
+>    * Truyền dữ liệu trực tiếp giữa các GPU **ở các máy chủ khác nhau qua mạng (Inter-node)** giảm thiểu trung gian qua CPU $\to$ **InfiniBand + GPUDirect RDMA**.
+>    * Truyền dữ liệu trực tiếp từ **ổ cứng lưu trữ (NVMe / Parallel Storage) vào thẳng VRAM GPU** bỏ qua CPU Bounce Buffer $\to$ **GPUDirect Storage (GDS)**.
+> 3. **Phân biệt 3D Parallelism:**
 >    * Copy nguyên mô hình lên mỗi GPU, chia nhỏ mini-batch dữ liệu $\to$ **Data Parallelism**.
 >    * Cắt ma trận trọng số của **cùng 1 tầng (intra-layer)** ra nhiều GPU qua NVLink $\to$ **Tensor Parallelism**.
 >    * Chia **các tầng nối tiếp nhau (inter-layer)** cho các GPU/Node khác nhau như dây chuyền $\to$ **Pipeline Parallelism**.
-> 4. **Bẫy Storage Tiers:** Lưu *code, script, config* $\to$ **NFS**. Lưu *dữ liệu đang huấn luyện cho cụm hàng trăm node đọc song song* $\to$ **Parallel File System (Lustre/GPFS/WEKA)**. Lưu *dữ liệu thô khổng lồ dài hạn giá rẻ* $\to$ **Object Storage (S3)**.
+> 4. **Phân biệt Storage Tiers:** Lưu *code, script, config* $\to$ **NFS**. Lưu *dữ liệu đang huấn luyện cho cụm hàng trăm node đọc song song* $\to$ **Parallel File System (Lustre/GPFS/WEKA)**. Lưu *dữ liệu thô khổng lồ dài hạn giá rẻ* $\to$ **Object Storage (S3)**.
 
-### Câu hỏi tự kiểm tra (Mini Quiz):
+### Câu hỏi luyện tập minh họa (Mini Quiz):
 1. **Câu 1:** Một công ty khởi nghiệp AI muốn huấn luyện thử nghiệm một mô hình ngôn ngữ trong 2 tuần nhưng không có vốn đầu tư mua sắm máy chủ ban đầu. Lựa chọn hạ tầng nào là phù hợp nhất?
    * *Đáp án:* **Cloud Infrastructure (mô hình chi phí OpEx - Pay-as-you-go)** vì cho phép thuê GPU tức thì mà không cần vốn đầu tư ban đầu (CapEx) và giải phóng tài nguyên ngay sau khi hoàn tất thử nghiệm.
-2. **Câu 2:** Khi huấn luyện một mô hình LLM khổng lồ mà kích thước của một tầng đơn lẻ (single layer) vượt quá dung lượng VRAM của 1 GPU, kỹ sư phải chia nhỏ ma trận trọng số của chính tầng đó ra nhiều GPU trong cùng một node. Kỹ thuật này gọi là gì và cần kết nối phần cứng nào?
-   * *Đáp án:* **Tensor Parallelism (Song song hóa Tensor)**, đòi hỏi kết nối băng thông cực cao nội bộ node là **NVLink / NVSwitch**.
-3. **Câu 3:** Trong quá trình huấn luyện LLM trên cụm 64 máy chủ GPU, các GPU tampak thường xuyên rơi vào trạng thái chờ rỗi (GPU Starvation) do CPU bị quá tải khi phải đọc dữ liệu từ hệ thống tệp song song vào System RAM rồi mới chép sang VRAM. Công nghệ nào của NVIDIA giải quyết trực tiếp nút thắt này?
-   * *Đáp án:* **NVIDIA GPUDirect Storage (GDS)** — tạo đường truyền DMA trực tiếp từ ổ cứng lưu trữ (NVMe/Parallel FS) vào thẳng VRAM của GPU mà bỏ qua hoàn toàn CPU và System RAM.
-4. **Câu 4:** Tại sao định dạng số học **`BF16` (Bfloat16)** lại được ưa chuộng hơn **`FP16`** khi huấn luyện trước (Pre-training) các mô hình ngôn ngữ lớn?
-   * *Đáp án:* Vì **`BF16` giữ nguyên 8-bit phần số mũ (Exponent) giống hệt như `FP32`**, mang lại dải động (Dynamic Range) cực rộng giúp ngăn chặn hiện tượng tràn số (Overflow/Underflow) của đạo hàm mà chỉ tốn một nửa dung lượng bộ nhớ so với `FP32`.
-5. **Câu 5:** Một ngân hàng có quy định pháp lý nghiêm ngặt bắt buộc mọi dữ liệu giao dịch tài chính và hồ sơ khách hàng không bao giờ được rời khỏi trung tâm dữ liệu vật lý của ngân hàng, đồng thời hệ thống AI phát hiện gian lận của họ phải chạy liên tục 24/7 quanh năm. Họ nên chọn mô hình hạ tầng nào?
-   * *Đáp án:* **On-Premise Infrastructure (Hạ tầng tại chỗ - CapEx)** để đảm bảo chủ quyền dữ liệu tuyệt đối (Data Sovereignty) và tối ưu chi phí dài hạn cho tải công việc chạy liên tục 24/7.
+2. **Câu 2:** Khi huấn luyện một mô hình LLM khổng lồ mà kích thước của một tầng đơn lẻ (single layer) vượt quá dung lượng VRAM của 1 GPU, kỹ sư phải chia nhỏ ma trận trọng số của chính tầng đó ra nhiều GPU trong cùng một node. Kỹ thuật này gọi là gì và thường ưu tiên kết nối phần cứng nào?
+   * *Đáp án:* **Tensor Parallelism (Song song hóa Tensor)**, thường đòi hỏi kết nối băng thông rất cao nội bộ node là **NVLink / NVSwitch**.
+3. **Câu 3:** Trong quá trình huấn luyện LLM trên cụm 64 máy chủ GPU, các GPU thường xuyên rơi vào trạng thái chờ rỗi (GPU Starvation) do CPU bị quá tải khi phải đọc dữ liệu từ hệ thống tệp song song vào System RAM rồi mới chép sang VRAM. Công nghệ nào của NVIDIA giải quyết trực tiếp nút thắt này?
+   * *Đáp án:* **NVIDIA GPUDirect Storage (GDS)** — tạo đường truyền DMA trực tiếp từ ổ cứng lưu trữ (NVMe/Parallel FS) vào thẳng VRAM của GPU mà bỏ qua CPU Bounce Buffer trên System RAM.
+4. **Câu 4:** Tại sao định dạng số học **`BF16` (Bfloat16)** thường được ưa chuộng hơn **`FP16`** khi huấn luyện trước (Pre-training) các mô hình ngôn ngữ lớn?
+   * *Đáp án:* Vì **`BF16` giữ nguyên 8-bit phần số mũ (Exponent) giống như `FP32`**, mang lại dải động (Dynamic Range) rộng hơn `FP16`, giúp giảm nguy cơ tràn số (Overflow/Underflow) của đạo hàm và thường giảm nhu cầu phải dùng Loss Scaling trong mixed-precision training (dù `BF16` có độ chính xác phần trị thấp hơn `FP16` và không loại bỏ hoàn toàn mọi khả năng overflow).
+5. **Câu 5:** Một ngân hàng có quy định pháp lý nghiêm ngặt yêu cầu dữ liệu giao dịch tài chính và hồ sơ khách hàng phải được lưu trữ và xử lý ngay trong trung tâm dữ liệu nội bộ của ngân hàng, đồng thời hệ thống AI phát hiện gian lận của họ phải chạy liên tục 24/7 quanh năm. Họ nên chọn mô hình hạ tầng nào?
+   * *Đáp án:* **On-Premise Infrastructure (Hạ tầng tại chỗ - CapEx)** kết hợp với các biện pháp kiểm soát truy cập, phân vùng mạng và bảo mật vật lý nghiêm ngặt để đáp ứng yêu cầu quản trị dữ liệu tại chỗ (Data Sovereignty) và tối ưu chi phí dài hạn cho tải công việc chạy liên tục 24/7.
 6. **Câu 6:** Trong trung tâm dữ liệu AI, lưu lượng mạng chủ yếu phát sinh từ việc hàng trăm máy chủ GPU liên tục đồng bộ hóa các vector đạo hàm (Gradients) với nhau thông qua thư viện NCCL. Loại lưu lượng mạng này được gọi là gì?
    * *Đáp án:* **East-West Traffic (Lưu lượng Đông-Tây)** giữa các máy chủ bên trong trung tâm dữ liệu (đối lập với North-South Traffic từ người dùng bên ngoài gọi vào).

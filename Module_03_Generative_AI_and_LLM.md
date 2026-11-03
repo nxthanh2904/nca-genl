@@ -49,10 +49,10 @@ Trước và song song với Transformer, giới nghiên cứu đã phát triể
 
 ### 1.3. Tốc độ chấp nhận kỷ lục & Ba động lực bùng nổ (3 Pillars of the Tipping Point)
 * **Kỷ lục lịch sử:** ChatGPT chỉ mất đúng **2 tháng** để cán mốc **100 triệu người dùng**, bỏ xa TikTok (9 tháng), Instagram (2.5 năm) và Netflix (10 năm).
-* **Ba động lực cốt lõi hội tụ tạo nên điểm bùng phát (Tipping Point - Hay hỏi thi):**
+* **Ba động lực cốt lõi hội tụ tạo nên điểm bùng phát (Tipping Point):**
   1. **Massive Amounts of Data:** Lượng dữ liệu số hóa khổng lồ tích lũy từ Internet suốt nhiều thập kỷ (văn bản Common Crawl, Wikipedia, sách báo, hình ảnh, video, mã nguồn mở GitHub).
   2. **Cloud Computing & Hyperscale Data Centers:** Năng lực điện toán đám mây quy mô lớn giúp việc kết nối hàng chục nghìn GPU thành một siêu máy tính huấn luyện trở nên khả thi.
-  3. **AI Accelerators & Transformer Architecture:** Đột phá kép về phần cứng chip tăng tốc AI (GPU NVIDIA với Tensor Cores, NVLink) và kiến trúc thuật toán **Transformer (2017)** (loại bỏ nút thắt tuần tự của RNN, cho phép huấn luyện song song hoàn toàn).
+  3. **AI Accelerators & Transformer Architecture:** Đột phá kép về phần cứng chip tăng tốc AI (GPU NVIDIA với Tensor Cores, NVLink) và kiến trúc thuật toán **Transformer (2017)** (loại bỏ nút thắt tuần tự của RNN trong quá trình huấn luyện, cho phép song song hóa hiệu quả trên các vị trí token).
 
 ---
 
@@ -186,27 +186,29 @@ flowchart LR
 2. **Recurrent Neural Networks (RNN) & LSTM (Long Short-Term Memory):**
    * Để xử lý chuỗi văn bản theo thứ tự thời gian, **RNN** đưa từng từ vào mạng lần lượt từ trái sang phải ($t_1 \to t_2 \to t_3 \dots$) và duy trì một vector **Trạng thái ẩn (Hidden State $h_t$)** đóng vai trò làm "bộ nhớ ngắn hạn" truyền từ bước trước sang bước sau: $h_t = f(W \cdot h_{t-1} + U \cdot x_t)$.
    * **LSTM** và **GRU** cải tiến RNN bằng cách thêm các cổng điều khiển (**Forget Gate, Input Gate, Output Gate**) và đường truyền **Cell State** để giữ thông tin lâu hơn một chút.
-   * **HAI HẠN CHẾ CHÍ MẠNG CỦA RNN / LSTM (Câu hỏi tủ luôn xuất hiện trong đề thi NCA-GENL!):**
-     * **Thứ nhất – Nút thắt xử lý tuần tự (Sequential Bottleneck $\to$ Không thể song song hóa trên GPU):** Để tính được trạng thái ẩn $h_t$ của từ thứ $100$, mạng RNN bắt buộc phải đợi tính xong từ thứ $1, 2, \dots, 99$. Sự phụ thuộc tuần tự theo thời gian này khiến hàng nghìn nhân GPU không thể tính toán các từ trong câu cùng một lúc, làm quá trình huấn luyện trên tập dữ liệu lớn trở nên chậm chạp bất khả thi!
-     * **Thứ hai – Quên ngữ cảnh dài & Triệt tiêu đạo hàm theo thời gian (Loss of Long-Range Dependencies & Vanishing Gradients through Time):** Khi chuỗi văn bản dài hàng trăm từ, thông tin từ những từ ở đầu câu bị nén ép và phai nhạt dần qua các phép nhân ma trận liên tiếp (triệt tiêu đạo hàm BPTT), khiến mô hình "quên sạch" chủ ngữ ở đầu đoạn văn khi đọc đến cuối đoạn.
+   * **HAI HẠN CHẾ LỚN CỦA RNN / LSTM (Khái niệm đáng ôn theo Blueprint):**
+     * **Thứ nhất – Nút thắt xử lý tuần tự (Sequential Bottleneck $\to$ Khó song song hóa theo chiều dài chuỗi khi huấn luyện):** Để tính được trạng thái ẩn $h_t$ của từ thứ $100$, mạng RNN phải đợi tính xong từ thứ $1, 2, \dots, 99$. Sự phụ thuộc tuần tự theo bước thời gian này hạn chế khả năng tính toán đồng thời các vị trí token trong cùng một chuỗi trên GPU khi huấn luyện!
+     * **Thứ hai – Khó khăn với phụ thuộc tầm xa & Triệt tiêu đạo hàm theo thời gian (Long-Range Dependencies & Vanishing Gradients through Time):** Khi chuỗi văn bản dài, thông tin từ những từ ở đầu câu dễ bị suy giảm qua nhiều bước truyền trạng thái liên tiếp (BPTT), khiến mô hình khó giữ được ngữ cảnh xa.
 
 ---
 
-### 4.4. Bậc 3: Cuộc cách mạng Transformer (2017) – Xóa bỏ sự tuần tự bằng Self-Attention
-Kiến trúc **Transformer** đập bỏ hoàn toàn cơ chế đọc từng từ tuần tự của RNN và thay bằng cơ chế **Self-Attention (Tự chú ý)** kết hợp **Contextualized Embeddings** (mỗi từ có một vector động thay đổi linh hoạt theo đúng ngữ cảnh của câu đó!):
+### 4.4. Bậc 3: Cuộc cách mạng Transformer (2017) – Song song hóa theo vị trí token khi huấn luyện với Self-Attention
+Kiến trúc **Transformer** thay thế cơ chế truyền trạng thái tuần tự của RNN bằng cơ chế **Self-Attention (Tự chú ý)** kết hợp **Contextualized Embeddings** (mỗi từ có một vector biểu diễn phụ thuộc ngữ cảnh của câu):
+
+> **Lưu ý kỹ thuật quan trọng:** Transformer có khả năng **song song hóa tốt trên các vị trí token trong quá trình huấn luyện** (do toàn bộ chuỗi huấn luyện đã biết trước) so với RNN truyền thống. Tuy nhiên, với mô hình sinh văn bản **autoregressive** (như GPT, LLaMA), **quá trình decoding lúc suy luận thường tạo token tuần tự từng bước một**, dù các phép toán ma trận bên trong mỗi bước và trên nhiều request (batching) có thể được song song hóa trên GPU. Hiệu suất sử dụng GPU/Tensor Cores thực tế phụ thuộc vào workload, batch size, độ dài chuỗi, kernels (như FlashAttention) và giới hạn băng thông bộ nhớ (memory-bandwidth bound ở pha decode).
 
 ```mermaid
 flowchart TD
-    subgraph RNN_Arch["1. Kiến trúc RNN / LSTM (Tuần tự từng bước - Nghẽn cổ chai trên GPU & Quên đầu câu)"]
+    subgraph RNN_Arch["1. Kiến trúc RNN / LSTM (Phụ thuộc tuần tự theo bước thời gian t₁ -> t₂ -> t₃)"]
         direction LR
-        W1["Từ 1<br/>(t₁)"] -->|h₁| W2["Từ 2<br/>(t₂)"] -->|h₂| W3["Từ 3<br/>(t₃)"] -->|h₃| W4["Từ 4<br/>(t₄ - Bắt buộc đợi t₁..t₃ xong mới tính được!)"]
+        W1["Từ 1<br/>(t₁)"] -->|h₁| W2["Từ 2<br/>(t₂)"] -->|h₂| W3["Từ 3<br/>(t₃)"] -->|h₃| W4["Từ 4<br/>(t₄ - Phải đợi t₁..t₃ tính xong)"]
     end
 
-    subgraph Trans_Arch["2. Kiến trúc Transformer (Song song 100% trên GPU + Self-Attention)"]
+    subgraph Trans_Arch["2. Kiến trúc Transformer (Song song hóa các token khi Training + Self-Attention)"]
         direction TB
-        AllWords["Nạp ĐỒNG THỜI toàn bộ chuỗi vào GPU cùng một lúc: [Từ 1, Từ 2, Từ 3, Từ 4] (+ Positional Encoding)"]
-        Attn["Cơ chế Self-Attention:<br/>Nhân ma trận (Q × Kᵀ) tính trực tiếp mức độ liên kết giữa MỌI cặp từ bất kể khoảng cách xa gần (O(1) path length)"]
-        GPU_Out["Tận dụng 100% Tensor Cores trên GPU<br/>Hiểu sâu ngữ cảnh động (Contextualized Embedding) & Mở rộng lên hàng nghìn tỷ tham số!"]
+        AllWords["Khi Training: Xử lý đồng thời các vị trí token trong chuỗi: [Từ 1, Từ 2, Từ 3, Từ 4] (+ Positional Encoding)"]
+        Attn["Cơ chế Self-Attention:<br/>Nhân ma trận (Q × Kᵀ) tính trực tiếp mức độ liên kết giữa các cặp token trong cửa sổ ngữ cảnh (O(1) path length)"]
+        GPU_Out["Tận dụng hiệu quả Tensor Cores cho phép nhân ma trận;<br/>Lưu ý: Khi Autoregressive Decoding, token mới vẫn được sinh tuần tự từng bước!"]
         
         AllWords ==> Attn ==> GPU_Out
     end
@@ -214,11 +216,11 @@ flowchart TD
 
 ---
 
-## 5. Bẫy đề thi NCA-GENL & Câu hỏi Thực chiến (Exam Traps & Mini Quiz)
+## 5. Lưu ý Ôn tập & Câu hỏi Luyện tập Minh họa (Review Notes & Practice Quiz)
 
 > [!WARNING]
-> **Các bẫy kinh điển trong đề thi Module 3:**
-> 1. **Bẫy RNN vs. Transformer:** Tại sao Transformer huấn luyện nhanh hơn và hiệu quả hơn RNN vượt trội trên GPU? $\to$ Vì Transformer **loại bỏ sự phụ thuộc tuần tự (sequential dependency)** của RNN, cho phép xử lý toàn bộ các token trong chuỗi **song song (in parallel)** và nắm bắt sự phụ thuộc tầm xa (long-range dependencies) trực tiếp qua cơ chế **Self-Attention**.
+> **Các điểm cần lưu ý ở Module 3:**
+> 1. **So sánh RNN vs. Transformer:** Tại sao Transformer huấn luyện hiệu quả hơn RNN trên GPU? $\to$ Vì trong quá trình huấn luyện, Transformer **loại bỏ sự phụ thuộc tuần tự theo bước thời gian giữa các vị trí token** của RNN, cho phép tính toán trên toàn bộ chuỗi huấn luyện **song song (in parallel)** và nắm bắt phụ thuộc tầm xa trực tiếp qua **Self-Attention**. (Lưu ý: lúc suy luận autoregressive, việc sinh từng token đầu ra vẫn diễn ra tuần tự).
 > 2. **Bẫy CBOW vs. Skip-gram (Word2Vec):** Dùng các từ xung quanh đoán 1 từ ở giữa $\to$ **CBOW**. Dùng 1 từ ở giữa đoán các từ ngữ cảnh xung quanh $\to$ **Skip-gram**.
 > 3. **Bẫy RLHF vs. DPO:** Phương pháp căn chỉnh (Alignment) nào giúp tinh chỉnh LLM theo sở thích con người một cách trực tiếp trên các cặp dữ liệu ưu tiên mà **không cần huấn luyện một mô hình phần thưởng (Reward Model) riêng biệt và không cần PPO**? $\to$ Chọn **DPO (Direct Preference Optimization)**.
 > 4. **Bẫy Foundation Model:** Foundation Model được huấn luyện ban đầu (Pre-trained) bằng phương pháp nào? $\to$ **Self-supervised learning trên tập dữ liệu khổng lồ không gắn nhãn (Massive unlabeled data)**.

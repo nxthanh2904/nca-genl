@@ -1,8 +1,8 @@
 # Module 7: Model Training & Deployment Lifecycle (Vòng đời Huấn luyện & Triển khai Mô hình)
 
 > [!IMPORTANT]
-> **Trọng tâm ôn thi NCA-GENL ở Module 7 (Thuộc Domain "Software Development - 24%", "Experimentation - 22%" & "Data Analysis - 14%"):**
-> Thuộc lòng **5 giai đoạn trong vòng đời dự án ML/GenAI**; phân biệt **3 nguồn dữ liệu**; hiểu vai trò sống còn của **EDA (Exploratory Data Analysis)**, xử lý dữ liệu khuyết/ngoại lai/mất cân bằng (**SMOTE, Normalization vs. Standardization**), và các công cụ tiền xử lý văn bản (**Regex, N-grams, TF-IDF, Stemming vs. Lemmatization, Deduplication**); nắm rõ các **Hyperparameters (Learning Rate + Warmup/Decay, Batch Size + Gradient Accumulation, Epochs, Early Stopping)**; phân biệt đánh giá **Định lượng (Quantitative - bao gồm Perplexity) vs. Định tính (Qualitative)**; nắm chắc bộ 3 kỹ thuật nén & tối ưu triển khai: **ONNX**, **Quantization (`FP32` $\to$ `FP16` $\to$ `INT8`/`INT4`, PTQ vs. QAT)**, **Pruning (Structured 2:4 Sparsity vs. Unstructured)**, **Batch vs. Real-time Deployment**, **Docker & Kubernetes**, và giám sát **Data Drift vs. Concept Drift** sau triển khai.
+> **Trọng tâm ôn tập NCA-GENL ở Module 7 (Thuộc Domain "Software Development - 24%", "Experimentation - 22%" & "Data Analysis - 14%"):**
+> Nắm vững **5 giai đoạn trong vòng đời dự án ML/GenAI**; phân biệt **3 nguồn dữ liệu**; hiểu vai trò của **EDA (Exploratory Data Analysis)**, xử lý dữ liệu khuyết/ngoại lai/mất cân bằng (**SMOTE, Normalization vs. Standardization** và phòng chống **Data Leakage**), cùng các công cụ tiền xử lý văn bản (**Regex, N-grams, TF-IDF, Stemming vs. Lemmatization, Deduplication**); nắm rõ các **Hyperparameters (Learning Rate + Warmup/Decay, Batch Size + Gradient Accumulation, Epochs, Early Stopping)**; phân biệt đánh giá **Định lượng (Quantitative - bao gồm Perplexity) vs. Định tính (Qualitative)**; nắm chắc bộ 3 kỹ thuật nén & tối ưu triển khai: **ONNX**, **Reduced Precision & Quantization (`FP16`/`BF16`, `FP8`, `INT8`/`INT4`, PTQ vs. QAT)**, **Pruning (Structured 2:4 Sparsity vs. Unstructured)**, **Batch vs. Real-time Deployment**, **Docker & Kubernetes**, và giám sát **Data Drift vs. Concept Drift** sau triển khai.
 
 ---
 
@@ -50,13 +50,13 @@ Chất lượng của mô hình phụ thuộc trực tiếp vào nguyên lý b�
   2. **Phát hiện và xử lý Điểm ngoại lai dị biệt (Outliers):**
      * Dùng biểu đồ hộp (**Box Plot / IQR - Interquartile Range**) hoặc điểm chuẩn **Z-score ($|Z| > 3$)** để phát hiện các điểm dữ liệu sai lệch bất thường (ví dụ nhập nhầm tuổi khách hàng = `999`).
   3. **Xử lý Mất cân bằng Nhãn (Class Imbalance - Ví dụ: 99% bình thường, 1% gian lận):**
-     * **Oversampling (Tăng mẫu lớp thiểu số):** Nhân bản hoặc dùng thuật toán **SMOTE (Synthetic Minority Over-sampling Technique)** để nội suy sinh thêm mẫu mới cho lớp 1%.
-     * **Undersampling (Giảm mẫu lớp đa số):** Cắt bớt ngẫu nhiên mẫu của lớp 99%.
-     * **Cost-Sensitive Learning (Class Weights):** Tăng trọng số phạt trong hàm Loss gấp 100 lần nếu mô hình đoán sai mẫu thuộc lớp thiểu số.
+     * **Oversampling (Tăng mẫu lớp thiểu số):** Nhân bản hoặc dùng thuật toán **SMOTE (Synthetic Minority Over-sampling Technique)** để nội suy sinh thêm mẫu cho lớp thiểu số. *(Lưu ý chống Data Leakage: SMOTE chỉ được áp dụng **bên trong tập huấn luyện / training fold** sau khi đã chia tách Train/Validation/Test, tuyệt đối không chạy SMOTE trên toàn bộ dataset trước khi split!).*
+     * **Undersampling (Giảm mẫu lớp đa số):** Giảm bớt mẫu của lớp chiếm đa số.
+     * **Cost-Sensitive Learning (Class Weights):** Tăng trọng số phạt trong hàm Loss nếu mô hình đoán sai mẫu thuộc lớp thiểu số.
   4. **Chuẩn hóa Thang đo Đặc trưng (Feature Scaling: Normalization vs. Standardization):**
-     * Khi cột *"Tuổi"* có giá trị từ `18 – 80` còn cột *"Thu nhập"* có giá trị từ `10,000,000 – 500,000,000`, thuật toán Gradient Descent và khoảng cách vector sẽ bị cột Thu nhập lấn át hoàn toàn. Ta dùng 1 trong 2 cách:
-       * **Min-Max Normalization:** Ép mọi giá trị vào đoạn cố định **$[0, 1]$** theo công thức $x' = \frac{x - x_{\min}}{x_{\max} - x_{\min}}$.
-       * **Standardization (Z-Score Scaling):** Đưa phân phối về **Trung bình $\mu = 0$ và Độ lệch chuẩn $\sigma = 1$** theo công thức $z = \frac{x - \mu}{\sigma}$ (Ít bị bóp méo bởi Outliers hơn Min-Max).
+     * Khi cột *"Tuổi"* có giá trị từ `18 – 80` còn cột *"Thu nhập"* có giá trị từ `10,000,000 – 500,000,000`, thuật toán Gradient Descent và các thuật toán dựa trên khoảng cách (k-NN, SVM, K-Means, PCA) sẽ bị cột Thu nhập chi phối. Ta dùng 1 trong 2 cách (và lưu ý chỉ **`fit` tham số $x_{\min}, x_{\max}, \mu, \sigma$ trên tập Train**, sau đó dùng tham số đó để `transform` tập Validation/Test — tham khảo [scikit-learn Common Pitfalls](https://scikit-learn.org/stable/common_pitfalls.html)):
+       * **Min-Max Normalization:** Đưa giá trị trên tập train về đoạn **$[0, 1]$** theo công thức $x' = \frac{x - x_{\min}}{x_{\max} - x_{\min}}$.
+       * **Standardization (Z-Score Scaling):** Đưa phân phối về **Trung bình $\mu = 0$ và Độ lệch chuẩn $\sigma = 1$** theo công thức $z = \frac{x - \mu}{\sigma}$ (Ít bị ảnh hưởng bởi Outliers hơn Min-Max).
 
 ---
 
@@ -130,93 +130,95 @@ flowchart LR
 
 | Phương pháp đánh giá | Bản chất & Công cụ | Ví dụ chỉ số cụ thể |
 | :--- | :--- | :--- |
-| **1. Đánh giá Định lượng (Quantitative Evaluation)** | Đo lường tự động, khách quan và có thể lặp lại bằng các **công thức toán học và con số thống kê** trên tập dữ liệu kiểm thử (Test Set / Benchmarks). | • Phân loại: **Accuracy, Precision, Recall, F1-Score, ROC-AUC**.<br/>• Dịch thuật: **BLEU** \| Tóm tắt: **ROUGE** \| RAG: **Cosine Similarity**.<br/>• Độ tự tin nội tại của LLM: **Perplexity (PPL)**.<br/>• Hệ thống: **Latency (TTFT, TPOT), Throughput (tokens/s)**. |
-| **2. Đánh giá Định tính (Qualitative Evaluation)** | **Chuyên gia con người (Human-in-the-loop / Domain Experts)** hoặc khảo sát người dùng trực tiếp đọc, trải nghiệm và thẩm định chất lượng đầu ra theo ngữ cảnh. | Kiểm tra giọng văn có tự nhiên, lịch sự không; tính mạch lạc logic; phát hiện các ca **Ảo giác (Hallucination)** tinh vi; kiểm tra độ an toàn đạo đức, sắc thái văn hóa và cảm nhận thực tế (**Vibe check / Red Teaming**). |
+| **1. Đánh giá Định lượng (Quantitative Evaluation)** | Đo lường tự động, khách quan và có thể lặp lại bằng các **công thức toán học và con số thống kê** trên tập dữ liệu kiểm thử (Test Set / Benchmarks). | • Phân loại: **Accuracy, Precision, Recall, F1-Score, PR-AUC, ROC-AUC**.<br/>• Dịch thuật: **BLEU** \| Tóm tắt: **ROUGE**.<br/>• RAG: Phân tách **Retrieval** (`Recall@k`, `MRR`, `nDCG`), **Grounding/Faithfulness**, và **Answer Correctness/Relevance** (lưu ý `Cosine Similarity` chỉ đo độ gần giữa các vector nhúng, không đánh giá trực tiếp độ chính xác câu trả lời cuối cùng).<br/>• Mô hình ngôn ngữ nội tại: **Perplexity (PPL)**.<br/>• Hệ thống: **Latency (TTFT, TPOT), Throughput (tokens/s), Cost**. |
+| **2. Đánh giá Định tính (Qualitative Evaluation)** | **Chuyên gia con người (Human-in-the-loop / Domain Experts)** hoặc khảo sát người dùng trực tiếp đọc, trải nghiệm và thẩm định chất lượng đầu ra theo ngữ cảnh. | Kiểm tra giọng văn có tự nhiên, lịch sự không; tính mạch lạc logic; phát hiện các ca **Ảo giác (Hallucination)** tinh vi; kiểm tra độ an toàn đạo đức, sắc thái văn hóa và cảm nhận thực tế (**Human Evaluation / Red Teaming**). |
 
-### Làm rõ chỉ số Perplexity (PPL) cho LLM (Câu hỏi tủ trong đề thi!):
-* **Perplexity là gì?** Là lũy thừa tự nhiên của hàm mất mát Cross-Entropy trên tập kiểm thử:
+### Làm rõ chỉ số Perplexity (PPL) cho LLM (Khái niệm đáng ôn theo Blueprint):
+* **Perplexity là gì?** Là lũy thừa tự nhiên của hàm mất mát Cross-Entropy trung bình trên tập kiểm thử:
   $$\text{Perplexity (PPL)} = \exp\left(-\frac{1}{N}\sum_{i=1}^N \log P(w_i \mid w_{<i})\right) = e^{\text{Cross-Entropy Loss}}$$
-* **Ý nghĩa trực quan:** Đo lường **mức độ "bối rối / ngạc nhiên / phân vân"** (Branching factor) của mô hình ngôn ngữ khi dự đoán token tiếp theo.
-* **Trực giác cho Developer:** Nếu Mô hình A có $\text{Perplexity} = 8.5$ và Mô hình B có $\text{Perplexity} = 42.0$, điều đó có nghĩa là ở mỗi bước chọn từ tiếp theo, Mô hình A chỉ phân vân giữa ~8 từ hợp lý, trong khi Mô hình B đang hoang mang giữa 42 từ!
-* **Quy tắc vàng cần nhớ:** **Perplexity CÀNG THẤP (Lower is Better) $\to$ Cross-Entropy Loss càng thấp $\to$ Mô hình dự đoán ngôn ngữ CÀNG CHÍNH XÁC VÀ TỰ TIN!**
+* **Ý nghĩa trực quan:** Đo lường **mức độ "bối rối / không chắc chắn"** (Branching factor) của mô hình ngôn ngữ khi dự đoán token tiếp theo trên một bộ dữ liệu và bộ tokenizer xác định.
+* **Trực giác cho Developer:** Khi so sánh trên cùng một bộ tokenizer và tập test, nếu Mô hình A có $\text{Perplexity} = 8.5$ và Mô hình B có $\text{Perplexity} = 42.0$, điều đó có nghĩa là ở mỗi bước chọn từ tiếp theo, Mô hình A chỉ phân vân tương đương ~8 lựa chọn đều nhau, trong khi Mô hình B phân vân giữa ~42 lựa chọn.
+* **Quy tắc cần nhớ:** **Perplexity CÀNG THẤP (Lower is Better) $\to$ Cross-Entropy Loss càng thấp $\to$ Mô hình dự đoán phân phối ngôn ngữ trên tập test đó càng tốt.**
 
 ---
 
 ## 6. Giai đoạn 5: Model Deployment, Optimization (ONNX, Quantization, Pruning) & Drift Monitoring
 
-Sau khi huấn luyện xong, mô hình thường rất nặng nề. Để đưa lên Production phục vụ hàng triệu người dùng với chi phí thấp nhất, kỹ sư áp dụng các kỹ thuật chuẩn hóa và nén mô hình:
+Sau khi huấn luyện xong, mô hình thường tốn nhiều tài nguyên. Để đưa lên Production phục vụ người dùng hiệu quả, kỹ sư thường áp dụng các kỹ thuật chuẩn hóa và tối ưu hóa mô hình:
 
-### 6.1. Chuẩn hóa mô hình đa nền tảng với ONNX (Open Neural Network Exchange)
-* **ONNX** là **định dạng chuẩn mở trung gian (Open Standard Format)** biểu diễn đồ thị tính toán mạng nơ-ron (Computation Graph + Weights) hoàn toàn **độc lập với framework**.
-* **Giá trị cốt lõi (Interoperability & Portability):** Đội ngũ Data Science có thể thoải mái nghiên cứu và huấn luyện mô hình bằng **PyTorch, TensorFlow hoặc Scikit-learn**, sau đó xuất (Export) ra một file `.onnx` duy nhất để đội ngũ Engineering triển khai trên **ONNX Runtime (C++, C#, Java, JavaScript)** hoặc nạp thẳng vào **NVIDIA TensorRT / Triton Inference Server** mà không cần cài đặt bộ thư viện Python huấn luyện nặng nề.
+### 6.1. Chuẩn hóa biểu diễn mô hình với ONNX (Open Neural Network Exchange)
+* **ONNX** là **định dạng biểu diễn mô hình chuẩn mở (Open Standard Format)** giúp hỗ trợ khả năng tương tác (**Interoperability & Portability**) giữa các công cụ và runtime khác nhau (Tham khảo: [ONNX Specification](https://onnx.ai/) & [ONNX Runtime Docs](https://onnxruntime.ai/docs/)).
+* **Giá trị cốt lõi & Lưu ý thực tế:** Đội ngũ phát triển có thể huấn luyện mô hình trên các framework được hỗ trợ (như PyTorch, TensorFlow, Scikit-learn) và export sang đồ thị `.onnx` để chạy trên **ONNX Runtime** hoặc biên dịch tiếp sang **NVIDIA TensorRT / Triton Inference Server**. Tuy nhiên, **khả năng export và thực thi thành công phụ thuộc vào danh sách toán tử được hỗ trợ (operator support), phiên bản `opset`, trình chuyển đổi (converters), kích thước động (dynamic shapes) và execution provider**. Một mô hình sau khi export sang ONNX vẫn luôn cần kiểm tra **độ khớp số học (numerical parity)**, độ trễ và tính tương thích trên target runtime thực tế.
 
 ```mermaid
 flowchart LR
-    F1["PyTorch Model (.pt)"]
-    F2["TensorFlow / Keras (.pb)"]
+    F1["PyTorch Model"]
+    F2["TensorFlow / Keras"]
     F3["Scikit-learn / XGBoost"]
     
-    ONNX["Chuẩn trung gian mở<br/>📦 ONNX (.onnx)<br/>(Độc lập Framework - High Portability)"]
+    ONNX["Định dạng biểu diễn trung gian<br/>📦 ONNX (.onnx)<br/>(Tùy thuộc opset & operator support)"]
     
-    R1["ONNX Runtime (C++ / C# / Python / Mobile)"]
-    R2["NVIDIA TensorRT (Biên dịch tối ưu cực đại trên GPU NVIDIA)"]
+    R1["ONNX Runtime (CPU / CUDA / TensorRT EP)"]
+    R2["NVIDIA TensorRT Engine"]
     R3["NVIDIA Triton Inference Server"]
 
-    F1 & F2 & F3 ==>|"Export"| ONNX ==>|"Deploy / Compile"| R1 & R2 & R3
+    F1 & F2 & F3 ==>|"Export & Verify Parity"| ONNX ==>|"Deploy / Compile"| R1 & R2 & R3
 ```
 
 ---
 
-### 6.2. Bộ Ba Kỹ thuật Nén và Tăng tốc Mô hình: Quantization, Pruning & Distillation
+### 6.2. Các Kỹ thuật Giảm Độ chính xác (Reduced Precision), Lượng tử hóa (Quantization) & Cắt tỉa (Pruning)
 
-#### A. Kỹ thuật Quantization (Lượng tử hóa - Giảm độ chính xác bit số học)
-* **Quantization** nén mô hình bằng cách **giảm số lượng bit biểu diễn (bit-width)** của mỗi trọng số (Weights) và giá trị kích hoạt (Activations) từ số thực 32-bit (**`FP32`**) xuống **16-bit (`FP16` / `BF16`)**, **8-bit (`INT8` / `FP8`)** hoặc **4-bit (`INT4` - AWQ / GPTQ)**.
+#### A. Phân biệt Reduced/Mixed Precision và Quantization (Lượng tử hóa)
+* **Phân loại khái niệm kỹ thuật:**
+  * Chuyển đổi từ **`FP32` sang `FP16` hoặc `BF16`** thường được mô tả là **giảm độ chính xác dấu phẩy động (Reduced Precision) hoặc độ chính xác hỗn hợp (Mixed Precision)**.
+  * **Quantization (Lượng tử hóa)** thường chỉ việc ánh xạ trọng số (Weights) và/hoặc giá trị kích hoạt (Activations) sang các định dạng số có độ rộng bit thấp hơn — đặc biệt là số nguyên **`INT8` / `INT4`** hoặc định dạng dấu phẩy động 8-bit **`FP8`** — thông qua các hệ số tỷ lệ (**scale factors / zero-points**).
+* **Lưu ý thực nghiệm về dung lượng và tốc độ:** Giảm độ rộng bit từ 32-bit xuống 16-bit hoặc 8-bit giúp giảm dung lượng lưu trữ trọng số theo tỷ lệ bit tương ứng (~2x hoặc ~4x). Tuy nhiên, **mức tăng tốc thực tế và độ hao hụt chất lượng chỉ mang tính minh họa nếu không đi kèm model, dataset, dòng GPU/CPU, batch size, phiên bản phần mềm và phương pháp đo cụ thể**. Quantization có thể làm giảm chất lượng đầu ra (đặc biệt ở 4-bit) hoặc **không làm tăng tốc độ suy luận nếu phần cứng đích không có nhân tính toán (hardware kernels) hỗ trợ định dạng đó**.
 
 ```mermaid
 flowchart LR
-    FP32["32-bit Float (FP32 - 4 bytes)<br/>📦 Kích thước: 100 MB<br/>⚡ Tốc độ: 1.0x (Gốc)<br/>🎯 Độ chính xác: 95.0%"]
+    FP32["32-bit Float (FP32 - 4 bytes/param)<br/>📦 Dung lượng trọng số: 1.0x (Chuẩn gốc)<br/>🎯 Độ chính xác số học cao"]
     
-    FP16["16-bit Float (FP16 / BF16 - 2 bytes)<br/>📦 Kích thước: 50 MB (Giảm 50% / 2x)<br/>⚡ Tốc độ: ~1.8x - 2x<br/>🎯 Độ chính xác: 94.9%"]
+    FP16["16-bit Float (FP16 / BF16 - 2 bytes/param)<br/>📦 Dung lượng trọng số: ~0.5x (Giảm ~50%)<br/>⚡ Reduced / Mixed Precision trên Tensor Cores"]
     
-    INT8["8-bit Integer (INT8 / FP8 - 1 byte)<br/>📦 Kích thước: 25 MB (Giảm 75% - Nhỏ hơn 4 lần!)<br/>⚡ Tốc độ: ~3.0x - 4.0x trên Tensor Cores!<br/>🎯 Độ chính xác: 94.2% (Chỉ giảm <1%)"]
+    INT8["8-bit / 4-bit Quantization (FP8 / INT8 / INT4)<br/>📦 Dung lượng trọng số: ~0.25x (8-bit) đến ~0.125x (4-bit)<br/>⚡ Tăng tốc khi phần cứng & kernel hỗ trợ (VD: Hopper FP8 / INT8 Tensor Cores)"]
 
-    FP32 ==>|"Quantization"| FP16 ==>|"Quantization"| INT8
+    FP32 ==>|"Reduced Precision"| FP16 ==>|"Quantization (Scales / Calibration)"| INT8
 ```
 
-* **Phân biệt 2 phương pháp thực hiện Quantization (Hay hỏi thi):**
-  1. **PTQ (Post-Training Quantization - Lượng tử hóa sau huấn luyện):** Mô hình đã huấn luyện xong xuôi ở FP32/BF16 được đem nén thẳng xuống `INT8`/`FP8`/`INT4` (chỉ cần chạy qua một tập dữ liệu nhỏ khoảng vài trăm mẫu gọi là **Calibration Dataset** để đo dải giá trị cực đại/cực tiểu mà **không cần huấn luyện lại**). *Ưu điểm:* Cực nhanh, tiết kiệm tài nguyên (Hỗ trợ mạnh mẽ trong **NVIDIA TensorRT / TensorRT-LLM Model Optimizer**).
-  2. **QAT (Quantization-Aware Training - Huấn luyện nhận thức lượng tử hóa):** Chèn các nút giả lập sai số làm tròn (Fake quantization nodes) ngay trong quá trình Fine-tuning để mô hình tự điều chỉnh trọng số thích nghi với chuẩn 8-bit/4-bit. *Ưu điểm:* Bảo toàn độ chính xác cao hơn PTQ ở các mức bit cực thấp, nhưng tốn chi phí GPU để train thêm.
+* **Phân biệt 2 phương pháp thực hiện Quantization:**
+  1. **PTQ (Post-Training Quantization - Lượng tử hóa sau huấn luyện):** Mô hình đã huấn luyện xong được lượng tử hóa sang `INT8`/`FP8`/`INT4` mà **không cần huấn luyện lại toàn bộ**. Với lượng tử hóa cả activation (như `SmoothQuant` hoặc `FP8`/`INT8` static quantization), PTQ thường chạy qua một tập dữ liệu nhỏ (**Calibration Dataset** vài trăm mẫu) để ước lượng dải giá trị; trong khi một số phương pháp **weight-only quantization** trực tiếp theo từng nhóm trọng số có thể không cần bước calibration phức tạp.
+  2. **QAT (Quantization-Aware Training - Huấn luyện nhận thức lượng tử hóa):** Chèn các nút mô phỏng sai số lượng tử hóa (Fake quantization nodes) ngay trong quá trình huấn luyện/fine-tuning để mô hình tự điều chỉnh trọng số thích nghi với định dạng bit thấp. *Ưu điểm:* Thường giữ chất lượng tốt hơn PTQ ở mức bit rất thấp, nhưng tốn thêm chi phí GPU để huấn luyện.
 
 #### B. Kỹ thuật Model Pruning (Cắt tỉa mạng nơ-ron)
-* Giống như cắt tỉa những cành cây khô không ra quả: **Pruning** loại bỏ các trọng số gần bằng $0$, các nơ-ron, các kênh (channels), các đầu chú ý (Attention Heads) hoặc thậm chí toàn bộ các tầng dư thừa ít đóng góp vào kết quả dự đoán:
-  * **Unstructured Pruning (Cắt tỉa phi cấu trúc):** Cho các trọng số nhỏ lẻ rải rác trong ma trận bằng $0$. Tuy giảm được dung lượng khi nén file nhưng GPU khó tăng tốc vì ma trận bị thủng lỗ chỗ không đều.
-  * **Structured Pruning & NVIDIA 2:4 Structured Sparsity (Cắt tỉa có cấu trúc):** Cắt bỏ nguyên cả hàng/cột/kênh hoặc áp dụng chuẩn **2:4 Sparsity của NVIDIA** (trong mỗi nhóm 4 trọng số liên tiếp, giữ lại 2 số lớn nhất và cho 2 số nhỏ nhất bằng $0$) $\to$ Phần cứng **Sparse Tensor Cores** trên GPU Ampere/Hopper/Blackwell tự động bỏ qua các số $0$ và **tăng gấp đôi (2x) tốc độ nhân ma trận**!
-  * *(Trong hệ sinh thái NVIDIA hiện đại như mô hình **Llama-3.1-Nemotron-Nano/Ultra**, các kỹ sư kết hợp **Structured Pruning + Knowledge Distillation** thông qua phương pháp **Minitron** để tạo ra các mô hình vừa nhỏ gọn vừa cực kỳ thông minh!).*
+* **Pruning** loại bỏ các trọng số ít quan trọng, các kênh (channels), đầu chú ý (Attention Heads) hoặc tầng dư thừa:
+  * **Unstructured Pruning (Cắt tỉa phi cấu trúc):** Đặt các trọng số nhỏ lẻ rải rác trong ma trận bằng $0$. Tuy giảm được kích thước khi nén thưa nhưng phần cứng GPU thông thường khó tăng tốc trực tiếp nếu ma trận thưa không có cấu trúc đều.
+  * **Structured Pruning & NVIDIA 2:4 Structured Sparsity (Cắt tỉa có cấu trúc):** Cắt bỏ nguyên hàng/cột/kênh hoặc áp dụng mẫu **2:4 Sparsity của NVIDIA** (trong mỗi 4 trọng số liên tiếp có ít nhất 2 số bằng $0$) để phần cứng **Sparse Tensor Cores** trên GPU được hỗ trợ (từ kiến trúc Ampere trở đi) có thể khai thác tăng tốc phép nhân ma trận.
 
 ---
 
 ### 6.3. Phương thức Triển khai (Batch vs. Real-time) & Giám sát Sự trôi dạt (Drift Monitoring)
 * **Hai mô hình triển khai chính:**
-  1. **Batch Deployment / Offline Inference (Xử lý theo lô định kỳ):** Gom hàng triệu bản ghi chạy offline theo lịch cố định (ví dụ 2h sáng hàng ngày chạy dự báo doanh số tồn kho, gửi email gợi ý sản phẩm hàng tuần). *Mục tiêu tối ưu:* **Throughput (Thông lượng) và hiệu quả chi phí cao nhất**, không đòi hỏi độ trễ thấp tức thì.
-  2. **Real-time / Online Deployment (Suy luận thời gian thực):** Phục vụ trực tiếp từng yêu cầu của người dùng qua **REST API / gRPC / WebSockets** với độ trễ mili-giây (ví dụ: Chatbot CSKH, tự động hoàn thành code IDE, phát hiện gian lận khi quẹt thẻ). Thường đóng gói trong **Docker Containers**, chạy trên **NVIDIA Triton / NIM** và điều phối co giãn tự động (Horizontal Pod Autoscaler) bằng **Kubernetes (K8s)**.
+  1. **Batch Deployment / Offline Inference (Xử lý theo lô định kỳ):** Gom lượng lớn bản ghi chạy offline theo lịch cố định (ví dụ chạy dự báo doanh số tồn kho hàng đêm). *Mục tiêu tối ưu:* **Throughput (Thông lượng) và hiệu quả chi phí**, không đòi hỏi phản hồi tức thì.
+  2. **Real-time / Online Deployment (Suy luận thời gian thực):** Phục vụ trực tiếp từng yêu cầu của người dùng qua **REST API / gRPC / WebSockets** với độ trễ thấp (ví dụ: Chatbot CSKH, gợi ý code IDE, phát hiện gian lận khi quẹt thẻ). Thường đóng gói trong **Docker Containers**, chạy trên **NVIDIA Triton / NIM** và điều phối bằng **Kubernetes (K8s)**.
 * **Giám sát sau triển khai (Post-Deployment Monitoring) – Phân biệt Data Drift vs. Concept Drift:**
-  Mô hình AI không giống như phần mềm truyền thống viết xong là chạy mãi mãi; theo thời gian, thế giới thực thay đổi làm chất lượng mô hình suy thoái (**Model Decay / Degradation**):
+  Theo thời gian, môi trường thực tế thay đổi làm chất lượng mô hình suy giảm (**Model Decay / Degradation**):
 
-| Loại Trôi dạt (Drift) | Bản chất Toán học | Ví dụ Thực tế Dễ nhớ | Cách khắc phục |
+| Loại Trôi dạt (Drift) | Bản chất Toán học | Ví dụ Thực tế | Cách khắc phục |
 | :--- | :--- | :--- | :--- |
-| **1. Data Drift (Covariate Shift / Feature Drift)** | Phân phối của **dữ liệu đầu vào $P(X)$ thay đổi** so với tập dữ liệu lúc huấn luyện, nhưng quy luật bản chất $P(Y \mid X)$ vẫn giữ nguyên. | • Người dùng mạng xã hội bắt đầu dùng nhiều **từ lóng, viết tắt mới** mà lúc train mô hình chưa từng gặp.<br/>• Camera nhà máy bị mờ bụi hoặc thay đổi góc chiếu sáng khác với ảnh lúc train. | Thu thập dữ liệu đầu vào mới gần đây, gắn nhãn bổ sung và **huấn luyện lại (Retrain / Fine-tune)** hoặc cập nhật kho RAG. |
-| **2. Concept Drift (Sự trôi dạt khái niệm)** | Dữ liệu đầu vào $X$ trông vẫn như cũ, nhưng **bản chất mối quan hệ giữa đầu vào và đầu ra $P(Y \mid X)$ đã thay đổi hoàn toàn**! | • Cùng một mức thu nhập và lịch sử mua sắm đó, nhưng khi xảy ra **đại dịch COVID-19 hoặc khủng hoảng lạm phát**, hành vi tiêu dùng và tỷ lệ vỡ nợ của khách hàng đảo chiều hoàn toàn.<br/>• Kẻ lừa đảo đổi sang phương thức rửa tiền mới. | Phải **xây dựng lại tập nhãn mới phản ánh quy luật mới của thời cuộc**, điều chỉnh đặc trưng và huấn luyện lại mô hình (**Continuous Learning**). |
+| **1. Data Drift (Covariate Shift / Feature Drift)** | Phân phối của **dữ liệu đầu vào $P(X)$ thay đổi** so với tập dữ liệu lúc huấn luyện, trong khi mối quan hệ $P(Y \mid X)$ có thể chưa đổi. | • Người dùng mạng xã hội bắt đầu dùng nhiều **từ lóng, viết tắt mới** mà lúc train mô hình chưa gặp.<br/>• Camera nhà máy bị mờ bụi hoặc thay đổi góc chiếu sáng khác với ảnh lúc train. | Thu thập dữ liệu đầu vào mới đại diện, gắn nhãn bổ sung và **huấn luyện lại (Retrain / Fine-tune)** hoặc cập nhật kho RAG. |
+| **2. Concept Drift (Sự trôi dạt khái niệm)** | Dữ liệu đầu vào $X$ có thể vẫn tương tự, nhưng **mối quan hệ giữa đầu vào và đầu ra mục tiêu $P(Y \mid X)$ đã thay đổi**. | • Cùng một mức thu nhập và lịch sử mua sắm đó, nhưng khi xảy ra **biến động kinh tế vĩ mô / lạm phát**, hành vi tiêu dùng và tỷ lệ vỡ nợ của khách hàng thay đổi.<br/>• Kẻ gian đổi sang phương thức gian lận mới. | Cần **cập nhật tập nhãn mới phản ánh quy luật hiện hành**, điều chỉnh đặc trưng và huấn luyện lại mô hình (**Continuous Learning**). |
 
 ---
 
-## 7. Bẫy đề thi NCA-GENL & Câu hỏi Thực chiến (Exam Traps & Mini Quiz)
+## 7. Lưu ý Ôn tập & Câu hỏi Luyện tập Minh họa (Review Notes & Practice Quiz)
 
 > [!WARNING]
-> **Các bẫy kinh điển trong đề thi Module 7:**
-> 1. **Bẫy Perplexity:** Điểm Perplexity của Mô hình A là `12.5` và của Mô hình B là `45.0`. Mô hình nào tốt hơn? $\to$ **Mô hình A tốt hơn** (Perplexity càng thấp = mô hình càng ít bối rối và dự đoán từ tiếp theo càng chính xác!).
-> 2. **Bẫy Overfitting vs. Underfitting:** Training Loss rất thấp nhưng Validation Loss tăng cao $\to$ **Overfitting** (Sửa bằng: *Dropout, Early Stopping, Data Augmentation, L2 Weight Decay*). Cả hai Loss đều cao $\to$ **Underfitting** (Sửa bằng: *Mô hình lớn hơn, train thêm Epochs*).
-> 3. **Bẫy Quantization:** Giảm từ `FP32` (32-bit) xuống `INT8` (8-bit) giúp giảm kích thước bộ nhớ mô hình đi bao nhiêu lần? $\to$ **Giảm 4 lần ($32 / 8 = 4$)** (từ 100MB xuống 25MB) và tăng tốc khoảng $3\times$.
-> 4. **Bẫy Data Drift vs. Concept Drift:** Đầu vào thay đổi (từ lóng mới, nhóm tuổi khách hàng mới) $\to$ **Data Drift**. Ý nghĩa/hành vi thực tế thay đổi theo thời cuộc dù đầu vào giống hệt cũ $\to$ **Concept Drift**.
+> **Các điểm cần lưu ý ở Module 7:**
+> 1. **Lưu ý Perplexity:** Khi đo trên cùng tập kiểm thử và cùng bộ tokenizer, điểm Perplexity của Mô hình A là `12.5` và của Mô hình B là `45.0` $\to$ **Mô hình A có Perplexity thấp hơn** (mức độ bối rối thấp hơn khi dự đoán token tiếp theo).
+> 2. **Lưu ý Overfitting vs. Underfitting:** Training Loss rất thấp nhưng Validation Loss tăng cao $\to$ **Overfitting** (Giảm thiểu bằng: *Dropout, Early Stopping, Data Augmentation, L2 Weight Decay*). Cả hai Loss đều cao $\to$ **Underfitting** (Cải thiện bằng: *Mô hình có dung lượng phù hợp hơn, tinh chỉnh Learning Rate, huấn luyện thêm Epochs, cải thiện đặc trưng*).
+> 3. **Lưu ý Quantization:** Chuyển trọng số từ `FP32` (32-bit, 4 bytes) sang `INT8` (8-bit, 1 byte) giúp giảm dung lượng lưu trữ trọng số khoảng **4 lần ($32 / 8 = 4$)**; tốc độ suy luận thực tế phụ thuộc vào phần cứng/kernel hỗ trợ (như TensorRT trên GPU có INT8 Tensor Cores).
+> 4. **Lưu ý Data Drift vs. Concept Drift:** Phân phối đầu vào $P(X)$ thay đổi (từ lóng mới, nhóm khách hàng mới) $\to$ **Data Drift**. Mối quan hệ $P(Y \mid X)$ thay đổi theo thời cuộc $\to$ **Concept Drift**.
 
 ### Câu hỏi tự kiểm tra (Mini Quiz):
 1. **Câu 1:** Sau khi triển khai mô hình phân loại bình luận mạng xã hội lên Production được 6 tháng, kỹ sư nhận thấy độ chính xác suy giảm do người dùng bắt đầu sử dụng nhiều từ viết tắt và trào lưu ngôn ngữ mới chưa từng có trong tập dữ liệu huấn luyện ban đầu. Hiện tượng này được gọi là gì?

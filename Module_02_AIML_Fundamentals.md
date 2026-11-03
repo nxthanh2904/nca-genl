@@ -1,8 +1,8 @@
 # Module 2: AI/ML Fundamentals (Nền tảng Trí tuệ Nhân tạo & Học máy)
 
 > [!IMPORTANT]
-> **Trọng tâm ôn thi NCA-GENL ở Module 2 (Thuộc Domain "Core ML & AI Knowledge - 30%"):**
-> Phân biệt rõ mối quan hệ bao hàm **AI $\supset$ Machine Learning (ML) $\supset$ Deep Learning (DL) $\supset$ Generative AI**; nắm vững **3 phương pháp học máy cốt lõi (Supervised, Unsupervised, Reinforcement Learning)** cùng các thuật toán kinh điển (**PCA** để giảm chiều, **K-Means / DBSCAN** để phân cụm, **Linear/Logistic Regression, SVM, Decision Trees**, **Bagging vs. Boosting**); hiểu sự đánh đổi **Bias-Variance Tradeoff & Regularization (`L1` vs. `L2`)**; hiểu cách các tầng ẩn (**Hidden Layers**) tự động trích xuất đặc trưng từ thấp đến cao; nắm vững sự khác biệt giữa **Classical Programming vs. ML**, bộ ba khái niệm **Algorithm – Model – Inference**, và quy trình **7 bước huấn luyện mô hình** qua phép ẩn dụ Barista.
+> **Trọng tâm ôn tập NCA-GENL ở Module 2 (Thuộc Domain "Core ML & AI Knowledge - 30%"):**
+> Phân biệt rõ mối quan hệ giữa **AI $\supset$ Machine Learning (ML) $\supset$ Deep Learning (DL)** và vị trí của **Generative AI**; nắm vững **3 phương pháp học máy cốt lõi (Supervised, Unsupervised, Reinforcement Learning)** cùng các thuật toán kinh điển (**PCA** để giảm chiều, **K-Means / DBSCAN** để phân cụm, **Linear/Logistic Regression, SVM, Decision Trees**, **Bagging vs. Boosting**); hiểu sự đánh đổi **Bias-Variance Tradeoff & Regularization (`L1` vs. `L2`)**; hiểu cách các tầng ẩn (**Hidden Layers**) tự động trích xuất đặc trưng từ thấp đến cao; nắm vững sự khác biệt giữa **Classical Programming vs. ML**, bộ ba khái niệm **Algorithm – Model – Inference**, và quy trình **7 bước huấn luyện mô hình** qua phép ẩn dụ Barista.
 
 ---
 
@@ -22,25 +22,26 @@
 
 ## 2. Phân biệt chuẩn xác: AI vs. Machine Learning vs. Deep Learning
 
-### 2.1. Sơ đồ phân cấp mối quan hệ bao hàm
-Trong đề thi NCA-GENL, bạn cần nhớ rõ: **Generative AI là tập con của Deep Learning, Deep Learning là tập con của Machine Learning, và Machine Learning là tập con của Artificial Intelligence.**
+### 2.1. Sơ đồ phân cấp mối quan hệ giữa AI, ML, DL và Generative AI
+AI bao gồm ML, và Deep Learning là một nhánh của ML. **Generative AI mô tả loại nhiệm vụ/hệ thống tạo dữ liệu mới**, trong đó các hệ thống hiện đại chủ yếu dựa trên Deep Learning (LLMs, diffusion models). Lưu ý không nên coi toàn bộ mô hình sinh đều là Deep Learning theo nghĩa toán học tuyệt đối: một số mô hình xác suất truyền thống (như Naive Bayes, Gaussian Mixture Models - GMM, Hidden Markov Models - HMM) cũng có tính sinh.
 
 ```mermaid
 flowchart TD
     subgraph AI["1. Artificial Intelligence (Trí tuệ Nhân tạo - Từ những năm 1950)"]
         direction TB
-        DescAI["Bất kỳ hệ thống máy tính nào mô phỏng trí tuệ & hành vi con người<br/>(Bao gồm cả hệ chuyên gia Rule-based cứng / Symbolic AI như Deep Blue lẫn Học máy)"]
+        DescAI["Hệ thống máy tính mô phỏng trí tuệ & hành vi con người<br/>(Bao gồm cả hệ chuyên gia Rule-based / Symbolic AI như Deep Blue lẫn Học máy)"]
         
         subgraph ML["2. Machine Learning (Học máy - Bùng nổ từ những năm 1980-1990)"]
             direction TB
-            DescML["Nhánh con của AI: Máy tính TỰ HỌC QUY LUẬT THỐNG KÊ TỪ DỮ LIỆU<br/>mà không cần lập trình viên viết luật tường minh (Without Being Explicitly Programmed)"]
+            DescML["Nhánh con của AI: Máy tính HỌC QUY LUẬT THỐNG KÊ TỪ DỮ LIỆU<br/>mà không cần lập trình viên viết luật tường minh cho từng trường hợp"]
+            TradGen["Mô hình sinh xác suất cổ điển (GMM, HMM, Naive Bayes)<br/>cũng thuộc ML nhưng không dùng mạng nơ-ron sâu"]
             
             subgraph DL["3. Deep Learning (Học sâu - Bùng nổ từ 2012 với AlexNet)"]
                 direction TB
-                DescDL["Nhánh con của ML: Sử dụng Mạng Nơ-ron Nhân tạo nhiều lớp ẩn<br/>(Multi-layered Artificial Neural Networks) tự động trích xuất đặc trưng từ dữ liệu phi cấu trúc"]
+                DescDL["Nhánh con của ML: Sử dụng Mạng Nơ-ron Nhân tạo nhiều lớp ẩn<br/>(Multi-layered Artificial Neural Networks) học biểu diễn từ dữ liệu phi cấu trúc"]
                 
-                subgraph GenAI["4. Generative AI (AI Tạo sinh - Bùng nổ từ 2017-2022 với Transformer)"]
-                    DescGen["Tập con của DL: Học phân phối dữ liệu để SÁNG TẠO nội dung mới<br/>(Văn bản LLM, Hình ảnh Diffusion, Âm thanh, Video, Source Code)"]
+                subgraph GenAI["4. Modern Generative AI (AI Tạo sinh hiện đại - Trọng tâm NCA-GENL)"]
+                    DescGen["Các hệ thống tạo dữ liệu mới dựa trên Deep Learning:<br/>Văn bản (LLMs), Hình ảnh/Video (Diffusion), Âm thanh, Source Code"]
                 end
             end
         end
@@ -79,9 +80,9 @@ flowchart LR
 ```
 
 > [!TIP]
-> **Sự khác biệt sống còn giữa Traditional ML và Deep Learning (Hay hỏi trong đề thi):**
-> * **Traditional ML (Học máy cổ điển - Scikit-learn):** Bắt buộc phải có con người làm bước **Manual Feature Engineering** (Kỹ sư phải tự suy nghĩ và viết code trích xuất đặc trưng: ví dụ muốn phân loại ảnh xe hơi thì phải tự viết thuật toán tìm hình tròn của bánh xe, đo tỷ lệ khung xe rồi mới đưa vào SVM/Random Forest). Rất mạnh trên **dữ liệu dạng bảng có cấu trúc (Structured / Tabular Data)** nhưng yếu trên dữ liệu phi cấu trúc.
-> * **Deep Learning (Học sâu - PyTorch/TensorFlow):** Thực hiện **Automatic Feature Extraction (End-to-End Representation Learning)** — bạn chỉ cần ném thẳng bức ảnh thô, file âm thanh thô hoặc câu văn bản thô vào mạng nơ-ron, các tầng **Hidden Layers** sẽ tự động học cách trích xuất đặc trưng tối ưu nhất! Cực kỳ thống trị trên **dữ liệu phi cấu trúc (Unstructured Data: Text, Image, Audio, Video)**.
+> **Sự khác biệt quan trọng giữa Traditional ML và Deep Learning:**
+> * **Traditional ML (Học máy cổ điển - Scikit-learn):** Thường phụ thuộc nhiều vào bước **Manual Feature Engineering** (Kỹ sư cần thiết kế và trích xuất các đặc trưng đầu vào phù hợp trước khi đưa vào SVM/Random Forest/XGBoost). Rất hiệu quả trên **dữ liệu dạng bảng có cấu trúc (Structured / Tabular Data)**.
+> * **Deep Learning (Học sâu - PyTorch/TensorFlow):** Thực hiện **Automatic Feature Extraction (End-to-End Representation Learning)** — có thể đưa ảnh thô, âm thanh hoặc văn bản vào mạng nơ-ron để các tầng **Hidden Layers** tự động học biểu diễn đặc trưng đa cấp độ. Rất mạnh trên **dữ liệu phi cấu trúc (Unstructured Data: Text, Image, Audio, Video)**.
 
 ---
 
@@ -119,7 +120,7 @@ flowchart TD
 1. **Linear Regression (Hồi quy tuyến tính) $\to$ Bài toán Regression:**
    * Tìm một đường thẳng (hoặc siêu phẳng) $\hat{y} = w_1 x_1 + w_2 x_2 + \dots + b$ khớp nhất với các điểm dữ liệu để dự đoán một **con số liên tục** (ví dụ: dự đoán giá nhà từ diện tích và số phòng ngủ), tối ưu bằng cách cực tiểu hóa hàm mất mát **MSE (Mean Squared Error)**.
 2. **Logistic Regression (Hồi quy Logistic) $\to$ Bài toán Classification (Cẩn thận bẫy tên gọi!):**
-   * **CẢNH BÁO BẪY ĐỀ THI:** Dù trong tên có chữ *"Regression"*, nhưng **Logistic Regression là thuật toán PHÂN LOẠI (Classification)** chứ không phải hồi quy! Nó đưa tổng tuyến tính qua hàm **Sigmoid** $\sigma(z) = \frac{1}{1+e^{-z}}$ để ép đầu ra thành xác suất thuộc về một lớp từ $0$ đến $1$ (ví dụ: xác suất khách hàng rời bỏ dịch vụ Churn = 85%).
+   * **LƯU Ý TÊN GỌI:** Dù trong tên có chữ *"Regression"*, nhưng **Logistic Regression là thuật toán PHÂN LOẠI (Classification)** chứ không phải hồi quy dự đoán số thực liên tục! Nó đưa tổng tuyến tính qua hàm **Sigmoid** $\sigma(z) = \frac{1}{1+e^{-z}}$ để biến đổi đầu ra thành giá trị trong khoảng $(0, 1)$ biểu diễn xác suất thuộc về một lớp (ví dụ: xác suất khách hàng rời bỏ dịch vụ Churn = 85%).
 3. **Support Vector Machines (SVM - Máy Vector Hỗ trợ):**
    * Tìm siêu phẳng phân cách (Decision Boundary) sao cho **khoảng cách lề (Margin)** giữa hai lớp dữ liệu là rộng nhất. Sử dụng **Kernel Trick (RBF, Polynomial)** để chiếu dữ liệu không phân tách tuyến tính lên không gian chiều cao hơn nhằm phân loại dễ dàng.
 4. **Decision Trees (Cây quyết định) & Học Kết hợp (Ensemble Learning: Bagging vs. Boosting):**
@@ -134,11 +135,11 @@ flowchart TD
 
 ---
 
-### 3.2. Chi tiết các Thuật toán Học Không Giám Sát (Unsupervised Learning) hay ra thi:
+### 3.2. Chi tiết các Thuật toán Học Không Giám Sát (Unsupervised Learning) đáng lưu ý:
 1. **PCA (Principal Component Analysis - Phân tích Thành phần Chính):**
    * Thuộc nhánh **Unsupervised Learning (Giảm chiều dữ liệu - Dimensionality Reduction)**.
    * *Bản chất toán học:* Khi bảng dữ liệu có quá nhiều cột đặc trưng (ví dụ $1.000$ features) gây ra **Lời nguyền chiều dữ liệu (Curse of Dimensionality)** làm chậm quá trình train và tốn bộ nhớ, **PCA** tính toán các Vector riêng (Eigenvectors) của ma trận hiệp phương sai để xoay và chiếu dữ liệu sang một hệ trục tọa độ mới gồm ít trục trực giao hơn (ví dụ 20 cột **Principal Components**: $PC_1, PC_2, \dots, PC_{20}$).
-   * *Ưu điểm vàng:* Giữ lại được **tối đa lượng thông tin / phương sai (Maximum Explained Variance)** của dữ liệu gốc, đồng thời loại bỏ nhiễu và khử hoàn toàn hiện tượng đa cộng tuyến (các cột dư thừa tương quan nhau).
+   * *Ưu điểm chính:* Giữ lại được **phần lớn phương sai (Maximum Explained Variance)** của dữ liệu gốc trên các trục chính, đồng thời giảm nhiễu và giảm hiện tượng đa cộng tuyến tuyến tính giữa các biến.
 2. **t-SNE & UMAP:**
    * Các thuật toán giảm chiều **phi tuyến tính (Non-linear Dimensionality Reduction)** chuyên dùng để **trực quan hóa (Visualization)** các Vector Embedding 4096 chiều của LLM xuống biểu đồ 2D hoặc 3D để con người nhìn thấy các cụm từ vựng trên màn hình.
 3. **K-Means Clustering vs. DBSCAN (Phân cụm dữ liệu):**

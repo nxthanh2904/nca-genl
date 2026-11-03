@@ -1,11 +1,11 @@
 # Module 8: NVIDIA AI Ecosystem (Hệ sinh thái Toàn diện của NVIDIA)
 
 > [!IMPORTANT]
-> **Trọng tâm ôn thi NCA-GENL ở Module 8 (Thuộc Domain "Software Development - 24%" & "Data Analysis - 14%" — Chiếm ~30% tổng số câu hỏi của cả đề thi!):**
-> Bạn BẮT BUỘC phải nắm vững vai trò, kiến trúc và sự khác biệt của từng công cụ trong hệ sinh thái NVIDIA:
-> * **Phần cứng & Quản trị Cụm:** Hệ thống **DGX (Volta $\to$ Ampere $\to$ Hopper $\to$ Blackwell)**, công nghệ chia nhỏ GPU **MIG (Multi-Instance GPU)**, **Grace CPU** (kiến trúc Arm + NVLink-C2C), và phần mềm quản trị cụm **NVIDIA Base Command**.
+> **Trọng tâm ôn tập NCA-GENL ở Module 8 (Thuộc Domain "Software Development - 24%" & "Data Analysis - 14%"):**
+> Cần nắm vững vai trò, kiến trúc và sự khác biệt của từng công cụ trong hệ sinh thái NVIDIA:
+> * **Phần cứng & Quản trị Cụm:** Hệ thống **DGX (Volta $\to$ Ampere $\to$ Hopper $\to$ Blackwell)**, công nghệ chia nhỏ GPU **MIG (Multi-Instance GPU)** (tùy dòng GPU hỗ trợ), **Grace CPU** (kiến trúc Arm + NVLink-C2C), và phần mềm quản trị cụm **NVIDIA Base Command**.
 > * **Lập trình & Giám sát GPU:** **CUDA** (Thread $\to$ Warp $\to$ Block $\to$ Grid, cuBLAS/cuDNN/NCCL) & lệnh **`nvidia-smi`**.
-> * **Tăng tốc Khoa học Dữ liệu (NVIDIA RAPIDS):** Thuộc lòng bảng ánh xạ `Pandas` $\to$ **`cuDF`**, `NumPy` $\to$ **`cuPy`**, `Scikit-learn` $\to$ **`cuML`**, `NetworkX` $\to$ **`cuGraph`**, `PyArrow` $\to$ **`cuIO`**, và tìm kiếm vector **`cuVS / RAFT`**.
+> * **Tăng tốc Khoa học Dữ liệu (NVIDIA RAPIDS):** Nắm vững bảng ánh xạ `Pandas` $\to$ **`cuDF`**, `NumPy` $\to$ **`cuPy`**, `Scikit-learn` $\to$ **`cuML`**, `NetworkX` $\to$ **`cuGraph`**, `PyArrow` $\to$ **`cuIO`**, và tìm kiếm vector **`cuVS / RAFT`**.
 > * **Tối ưu Suy luận:** **NVIDIA TensorRT** (Layer Fusion, Quantization, Kernel Auto-Tuning) và **TensorRT-LLM** (In-flight Batching, PagedAttention, FP8 KV Cache).
 > * **Framework GenAI/LLM:** **NVIDIA NeMo** (Curator, Megatron, Customizer, Evaluator, Retriever, Guardrails) cùng dòng mô hình **NVIDIA Nemotron**, **BioNeMo**, **Picasso/Edify**.
 > * **Triển khai & Phục vụ Mô hình:** **NVIDIA Triton Inference Server** (Dynamic Batching, Concurrent Model Execution, Model Ensembles) và **NVIDIA NIM (Inference Microservices)**.
@@ -58,8 +58,9 @@ flowchart LR
 | **5. Blackwell (2024+)** | B200, GB200 NVL72 | Thế hệ Transformer Engine thứ 2 hỗ trợ lượng tử hóa **`FP4` / `FP6`**, NVLink thế hệ 5 (**1.8 TB/s**), kết nối 72 GPU Blackwell như một GPU khổng lồ duy nhất trong 1 Rack làm mát bằng chất lỏng (**GB200 NVL72**). |
 
 ### 2.2. Công nghệ Chia nhỏ GPU: MIG (Multi-Instance GPU)
-* **Vấn đề thực tế:** Một chiếc GPU A100/H100 80GB là quá dư thừa nếu chỉ dùng để chạy một mô hình nhỏ (như BERT hoặc SLM 1B) hoặc cho 7 sinh viên/kỹ sư cùng thực hành Jupyter Notebook. Nếu cho 7 người chạy chung trên 1 GPU bình thường, tiến trình của người này bị treo hoặc ngốn hết băng thông bộ nhớ sẽ làm chậm người kia (**Noisy Neighbor problem**).
-* **Giải pháp – NVIDIA MIG (Multi-Instance GPU):** Cho phép phân vùng vật lý **1 chiếc GPU lớn (A100/H100/B200) thành tối đa 7 GPU con độc lập hoàn toàn ở cấp độ phần cứng (7 MIG Instances)**. Mỗi MIG Instance có phần bộ nhớ HBM riêng, bộ nhớ đệm L2 Cache riêng và các cụm nhân SM riêng biệt — đảm bảo cách ly lỗi, bảo mật và chất lượng dịch vụ (QoS) 100%!
+* **Vấn đề thực tế:** Một chiếc GPU Data Center lớn như A100/H100 80GB có thể dư thừa tài nguyên nếu chỉ dùng để chạy một mô hình nhỏ (như BERT hoặc SLM nhỏ) hoặc phục vụ nhiều kỹ sư cùng chạy thực nghiệm nhẹ. Nếu cho nhiều tiến trình chạy chung trên 1 GPU theo chế độ mặc định, tiến trình này ngốn băng thông bộ nhớ có thể ảnh hưởng độ trễ của tiến trình kia (**Noisy Neighbor problem**).
+* **Giải pháp – NVIDIA MIG (Multi-Instance GPU):** Cho phép phân vùng vật lý **1 chiếc GPU dòng hỗ trợ (như A100, H100, H200, B200) thành tối đa 7 GPU con độc lập ở cấp độ phần cứng (tối đa 7 MIG Instances trên các SKU này)**. Mỗi MIG Instance có phần bộ nhớ HBM riêng, bộ nhớ đệm L2 Cache riêng và các cụm nhân SM riêng biệt — giúp cách ly lỗi và đảm bảo chất lượng dịch vụ (QoS) ổn định.
+* **Lưu ý giới hạn theo SKU phần cứng:** Số lượng MIG instances tối đa **phụ thuộc vào model GPU và MIG profiles cụ thể**. Ví dụ A100, H100, B200 có thể hỗ trợ tối đa 7 instances; một số sản phẩm khác hỗ trợ MIG (như A30) có giới hạn số instances nhỏ hơn. **MIG chỉ hoạt động trên các dòng GPU được NVIDIA hỗ trợ**, không áp dụng mặc định cho toàn bộ GPU NVIDIA (Tham khảo bảng SKU chính thức: [NVIDIA MIG Supported GPUs](https://docs.nvidia.com/datacenter/tesla/mig-user-guide/latest/supported-gpus.html)).
 
 ### 2.3. Bộ vi xử lý NVIDIA Grace CPU & Siêu chip Grace Hopper / Grace Blackwell
 * **Grace CPU:** Bộ vi xử lý máy chủ **72 nhân (cores) kiến trúc Arm Neoverse** hiệu suất cao và siêu tiết kiệm điện năng do chính NVIDIA thiết kế cho trung tâm dữ liệu AI.
@@ -133,7 +134,7 @@ flowchart LR
         P6["🔍 FAISS CPU / Annoy<br/>(Tìm kiếm Vector ANN)"]
     end
 
-    subgraph GPU_World["Hệ sinh thái NVIDIA RAPIDS trên GPU (Tăng tốc 10x - 100x)"]
+    subgraph GPU_World["Hệ sinh thái NVIDIA RAPIDS trên GPU (Tăng tốc xử lý song song)"]
         G1["⚡ cuDF<br/>(GPU DataFrame)"]
         G2["⚡ cuPy<br/>(GPU N-dimensional Array)"]
         G3["⚡ cuIO<br/>(Đọc ghi thẳng vào GPU VRAM)"]
@@ -150,23 +151,25 @@ flowchart LR
     P6 ==>|"Thay thế tương đương"| G6
 ```
 
-### Bảng đối chiếu thư viện CPU vs. NVIDIA RAPIDS (HỌC THUỘC LÒNG 100% CHO ĐỀ THI!)
+### Bảng đối chiếu thư viện CPU vs. NVIDIA RAPIDS (Khái niệm đáng ôn theo Blueprint)
 | Tác vụ Khoa học Dữ liệu | Thư viện chuẩn trên CPU | Thư viện tương ứng trên GPU (NVIDIA RAPIDS) | Chức năng chi tiết |
 | :--- | :--- | :--- | :--- |
-| **Xử lý Bảng dữ liệu (DataFrames)** | `Pandas` | **`cuDF`** | Lọc (filter), gom nhóm (`groupby`), nối bảng (`join/merge`), xử lý chuỗi Regex, làm sạch dữ liệu dạng bảng trên GPU (Có chế độ `cudf.pandas` tăng tốc Pandas mà **không cần sửa một dòng code nào**!). |
+| **Xử lý Bảng dữ liệu (DataFrames)** | `Pandas` | **`cuDF`** | Lọc (filter), gom nhóm (`groupby`), nối bảng (`join/merge`), xử lý chuỗi Regex, làm sạch dữ liệu dạng bảng trên GPU (Có chế độ `cudf.pandas` hỗ trợ tăng tốc nhiều thao tác Pandas với thay đổi code tối thiểu). |
 | **Tính toán Mảng đa chiều** | `NumPy` | **`cuPy`** | Các phép toán đại số tuyến tính, biến đổi Fourier, mảng ma trận đa chiều tăng tốc bằng CUDA. |
-| **Đọc / Ghi File tốc độ cao** | `PyArrow` / `Pandas I/O` | **`cuIO`** (Tích hợp dưới đáy `cuDF`) | Đọc, giải nén và ghi trực tiếp các tệp CSV, Apache Parquet, ORC, JSON từ ổ cứng (qua GPUDirect Storage) vào thẳng bộ nhớ GPU. |
+| **Đọc / Ghi File tốc độ cao** | `PyArrow` / `Pandas I/O` | **`cuIO`** (Tích hợp dưới đáy `cuDF`) | Đọc, giải nén và ghi trực tiếp các tệp CSV, Apache Parquet, ORC, JSON từ ổ cứng (hỗ trợ GPUDirect Storage) vào bộ nhớ GPU. |
 | **Học máy cổ điển (Classical ML)** | `Scikit-learn` | **`cuML`** | Chạy các thuật toán ML truyền thống trên GPU: Linear/Logistic Regression, Random Forest, XGBoost (qua FIL), K-Means, DBSCAN, PCA, UMAP, t-SNE, k-NN. |
-| **Phân tích Đồ thị (Graph Analytics)** | `NetworkX` | **`cuGraph`** | Phân tích mạng xã hội, phát hiện cộng đồng (Louvain), tìm đường đi ngắn nhất, xếp hạng nút (**PageRank**, BFS) trên đồ thị hàng tỷ cạnh. |
+| **Phân tích Đồ thị (Graph Analytics)** | `NetworkX` | **`cuGraph`** | Phân tích mạng xã hội, phát hiện cộng đồng (Louvain), tìm đường đi ngắn nhất, xếp hạng nút (**PageRank**, BFS) trên đồ thị lớn. |
 | **Tìm kiếm Vector & RAG** | `FAISS (CPU)` / `HNSWLib` | **`cuVS` / `RAFT`** | Tăng tốc lập chỉ mục (Indexing) và tìm kiếm láng giềng gần nhất (ANN Vector Search) cho các Vector Database như **Milvus**. |
 
-### Minh họa Code Python chuyển đổi sang NVIDIA RAPIDS chỉ bằng cách đổi câu lệnh `import`:
+### Minh họa Code Python chuyển đổi sang NVIDIA RAPIDS:
+> **Lưu ý về hiệu năng:** Mức độ tăng tốc thực tế khi chuyển từ CPU sang RAPIDS, TensorRT hoặc Quantization phụ thuộc chặt chẽ vào kích thước tập dữ liệu, đặc trưng bài toán, cấu hình GPU/CPU, băng thông bộ nhớ, batch size và phiên bản phần mềm; không có một tỷ lệ tăng tốc cố định áp dụng cho mọi trường hợp.
+
 ```python
-# --- CÁCH CŨ TRÊN CPU (Chạy mất 25 phút trên 50 triệu dòng) ---
+# --- CÁCH TRÊN CPU VỚI PANDAS & SCIKIT-LEARN ---
 # import pandas as pd
 # from sklearn.cluster import KMeans
 
-# --- CÁCH MỚI TRÊN GPU VỚI NVIDIA RAPIDS (Chạy chỉ mất 8 giây!) ---
+# --- CÁCH TRÊN GPU VỚI NVIDIA RAPIDS (API tương đồng) ---
 import cudf as pd                  # Thay pandas bằng cudf
 from cuml.cluster import KMeans    # Thay sklearn bằng cuml
 
@@ -264,11 +267,11 @@ Khi đã có mô hình tối ưu (TensorRT Engine, ONNX, PyTorch, vLLM...), làm
   * Chạy đồng thời các mô hình từ **TensorRT, TensorRT-LLM, vLLM, PyTorch (TorchScript), ONNX Runtime, TensorFlow, OpenVINO, Python Backend, và FIL (Forest Inference Library cho XGBoost/LightGBM/Random Forest)**.
   * Chạy được trên **cả GPU NVIDIA lẫn trên CPU** (rất hữu ích khi muốn chạy bước tiền xử lý hoặc mô hình nhẹ trên CPU và mô hình nặng trên GPU).
 * **Giao thức chuẩn:** Cung cấp sẵn giao diện **HTTP/REST** và **gRPC** (tốc độ cao), cùng endpoint xuất chỉ số giám sát **Prometheus Metrics** (GPU utilization, queue time, compute latency).
-* **4 Tính năng tối ưu vàng của Triton Inference Server (Cực kỳ hay hỏi trong đề thi!):**
-  1. **Dynamic Batching (Gom lô động):** Khi hàng trăm người dùng gửi request đơn lẻ (`Batch = 1`) tới server cách nhau vài mili-giây, Triton không đẩy lẻ tẻ từng cái vào GPU mà tự động giữ trong hàng đợi một khoảng thời gian cực ngắn (ví dụ `2 ms`), **gom chúng lại thành 1 Batch lớn rồi đẩy vào GPU nhân ma trận đúng 1 lần duy nhất** $\to$ Tăng vọt Throughput lên nhiều lần mà độ trễ hầu như không đổi!
-  2. **Concurrent Model Execution (Thực thi đồng thời nhiều mô hình):** Cho phép nạp và chạy **nhiều mô hình khác nhau** (hoặc nhiều bản sao `Instance Groups` của cùng 1 mô hình) **đồng thời trên cùng 1 chiếc GPU** để vắt kiệt 100% hiệu suất phần cứng.
-  3. **Model Ensemble Pipelines & Business Logic Scripting (BLS):** Cho phép nối chuỗi nhiều mô hình (ví dụ: `Tokenizer` $\to$ `Embedding Model` $\to$ `Reranker` $\to$ `LLM`) thành một đường ống duy nhất ngay trong bộ nhớ của Triton mà không tốn băng thông mạng gửi kết quả trung gian về Client.
-  4. **Triton Model Analyzer:** Công cụ dòng lệnh tự động chạy thử nghiệm các cấu hình (Batch size, số lượng model instances, độ chính xác) và vẽ biểu đồ giúp kỹ sư chọn được cấu hình Triton tối ưu nhất cho dung lượng VRAM hiện có.
+* **4 Tính năng tối ưu nổi bật của Triton Inference Server:**
+  1. **Dynamic Batching (Gom lô động):** Khi nhiều người dùng gửi request đơn lẻ (`Batch = 1`) tới server gần nhau, Triton có thể giữ trong hàng đợi một khoảng thời gian cấu hình cực ngắn (ví dụ `2 ms`), **gom chúng lại thành 1 Batch lớn hơn rồi đẩy vào GPU thực thi** $\to$ Cải thiện đáng kể Throughput trong ngưỡng độ trễ cho phép.
+  2. **Concurrent Model Execution (Thực thi đồng thời nhiều mô hình):** Cho phép nạp và chạy **nhiều mô hình khác nhau** (hoặc nhiều bản sao `Instance Groups` của cùng 1 mô hình) **đồng thời trên cùng 1 chiếc GPU** để tăng hiệu suất sử dụng phần cứng.
+  3. **Model Ensemble Pipelines & Business Logic Scripting (BLS):** Cho phép nối chuỗi nhiều mô hình (ví dụ: `Tokenizer` $\to$ `Embedding Model` $\to$ `Reranker` $\to$ `LLM`) thành một đường ống ngay trong Triton.
+  4. **Triton Model Analyzer:** Công cụ dòng lệnh chạy thử nghiệm các cấu hình (Batch size, số lượng model instances, độ chính xác) và xuất báo cáo giúp kỹ sư chọn cấu hình Triton phù hợp với giới hạn VRAM và SLA độ trễ.
 
 ```mermaid
 sequenceDiagram
@@ -291,22 +294,22 @@ sequenceDiagram
 ```
 
 > [!CAUTION]
-> **3 Bẫy kinh điển về Triton trong đề thi NCA-GENL (Đọc kỹ để không bao giờ mất điểm!):**
-> * **Bẫy 1:** Triton là **PHẦN MỀM máy chủ (Software)**, KHÔNG phải là một loại chip phần cứng GPU hay CPU!
-> * **Bẫy 2:** Triton chỉ dùng cho giai đoạn **Phục vụ Suy luận (Inference Serving)**, KHÔNG dùng để huấn luyện mô hình (Training)!
-> * **Bẫy 3:** Triton hỗ trợ **đa framework (PyTorch, ONNX, TensorFlow, TensorRT, XGBoost...)** chứ không chỉ giới hạn ở TensorRT, và chạy được trên **cả GPU lẫn CPU**!
+> **3 Điểm dễ nhầm lẫn về Triton trong bài thi NCA-GENL:**
+> * **Điểm 1:** Triton là **PHẦN MỀM máy chủ (Software)**, KHÔNG phải là một loại chip phần cứng GPU hay CPU!
+> * **Điểm 2:** Triton dùng cho giai đoạn **Phục vụ Suy luận (Inference Serving)**, KHÔNG dùng để huấn luyện mô hình (Training)!
+> * **Điểm 3:** Triton hỗ trợ **đa framework (PyTorch, ONNX, TensorFlow, TensorRT, vLLM, XGBoost...)** chứ không chỉ giới hạn ở TensorRT, và chạy được trên **cả GPU lẫn CPU**!
 
 ---
 
 ### 7.2. NVIDIA NIM (NVIDIA Inference Microservices)
-* **Bài toán thực tế của Developer:** Để tự tay triển khai một mô hình LLaMA-3 70B đạt tốc độ cao nhất, kỹ sư phải tự tải trọng số, cài đúng bản CUDA/cuDNN, viết script biên dịch sang TensorRT-LLM cho đúng dòng GPU H100, viết file cấu hình `config.pbtxt` cho Triton Inference Server và viết tầng bọc REST API $\to$ Mất từ vài ngày đến vài tuần lễ!
-* **Giải pháp – NVIDIA NIM:** Là các **Container Microservices suy luận đã được NVIDIA đóng gói và tối ưu hóa sẵn trọn gói (Pre-built, Pre-optimized Containers)**.
-* **Bên trong 1 hộp Container NVIDIA NIM có sẵn những gì?**
+* **Bài toán thực tế của Developer:** Để tự triển khai một mô hình LLM đạt hiệu năng cao, kỹ sư thường phải tải trọng số, đồng bộ phiên bản CUDA/cuDNN, biên dịch sang TensorRT-LLM/vLLM cho dòng GPU đích, cấu hình Triton Inference Server và viết tầng REST API.
+* **Giải pháp – NVIDIA NIM:** Là các **Container Microservices suy luận đã được NVIDIA đóng gói và tối ưu hóa sẵn (Pre-built, Pre-optimized Containers)** (Tham khảo: [NVIDIA NIM Documentation](https://docs.api.nvidia.com/nim/)).
+* **Bên trong 1 Container NVIDIA NIM thường tích hợp sẵn:**
   1. Trọng số mô hình nền tảng đã kiểm thử (LLaMA-3, Mistral, Nemotron, Embedding, Reranker, BioNeMo...).
-  2. Engine suy luận đã được tối ưu hóa tốt nhất cho phần cứng đích (**TensorRT / TensorRT-LLM / vLLM**).
+  2. Engine suy luận tối ưu cho phần cứng đích (**TensorRT / TensorRT-LLM / vLLM**).
   3. Máy chủ phục vụ công nghiệp (**NVIDIA Triton Inference Server**).
-  4. Giao diện **REST API chuẩn công nghiệp tương thích 100% với OpenAI API (`v1/chat/completions`, `v1/embeddings`)**!
-* **Lợi ích:** Triển khai mọi nơi (trên Cloud, On-Premise DGX, hoặc Kubernetes) chỉ trong **5 phút** bằng 1 câu lệnh `docker run`, và lập trình viên chỉ cần đổi đúng dòng `base_url` trong code Python là chuyển đổi mượt mà từ OpenAI sang mô hình tự host nội bộ!
+  4. Giao diện **REST API chuẩn hóa**: Nhiều NVIDIA NIM microservices cung cấp các API **tương thích một phần với các endpoint và schema kiểu OpenAI** (như `v1/chat/completions`, `v1/embeddings`), giúp tái sử dụng một số OpenAI SDK workflows. **Lưu ý:** Khả năng tương thích này **không đồng nghĩa với việc hỗ trợ toàn bộ mọi endpoint, tham số (parameters), chế độ streaming hoặc hành vi đặc thù** của OpenAI API; lập trình viên cần kiểm tra tài liệu của từng NIM và phiên bản cụ thể.
+* **Lợi ích:** Triển khai linh hoạt (trên Cloud, On-Premise DGX, hoặc Kubernetes) thông qua container chuẩn và thuận tiện tích hợp vào ứng dụng Python hiện có.
 
 ```python
 # Minh họa gọi NVIDIA NIM bằng thư viện chuẩn của OpenAI (Chỉ cần trỏ base_url về NIM container nội bộ!)

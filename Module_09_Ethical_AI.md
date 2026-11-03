@@ -1,8 +1,8 @@
 # Module 9: Ethical & Trustworthy AI (AI Đạo đức và Đáng tin cậy)
 
 > [!IMPORTANT]
-> **Trọng tâm ôn thi NCA-GENL ở Module 9 (Thuộc Domain "Trustworthy AI - 10%~16%"):**
-> Nhận diện **các rủi ro lớn của Generative AI** (Hallucination - Intrinsic vs. Extrinsic, các loại Thiên vị dữ liệu & thuật toán **Bias**, Plagiarism/IP Risks, PII Leakage, **Direct vs. Indirect Prompt Injection, Jailbreaking, Data Poisoning**); thuộc lòng **4 trụ cột của Trustworthy AI** và **4 giải pháp kỹ thuật tương ứng của NVIDIA** (**Confidential Computing** trên Hopper/Blackwell cho Privacy, **NeMo Guardrails** sử dụng ngôn ngữ **Colang** cho Safety, **Data Lineage & XAI: SHAP/LIME** cho Transparency, **Data Augmentation & Diverse Datasets** cho Non-discrimination); hiểu sâu cơ chế **Embedding Classifier**, cùng các khái niệm **Red Teaming (`Garak`)**, **Accountability** và các khung quản trị quốc tế (**NIST AI RMF, EU AI Act**).
+> **Trọng tâm ôn tập NCA-GENL ở Module 9 (Thuộc Domain "Trustworthy AI - 10%"):**
+> Nhận diện **các rủi ro lớn của Generative AI** (Hallucination - Intrinsic vs. Extrinsic, các loại Thiên vị dữ liệu & thuật toán **Bias**, Plagiarism/IP Risks, PII Leakage, **Direct vs. Indirect Prompt Injection, Jailbreaking, Data Poisoning**); nắm vững **4 trụ cột của Trustworthy AI** và **4 giải pháp kỹ thuật tương ứng của NVIDIA** (**Confidential Computing** trên Hopper/Blackwell cho Privacy, **NeMo Guardrails** sử dụng ngôn ngữ **Colang** cho Safety, **Data Lineage & XAI: SHAP/LIME** cho Transparency, **Data Augmentation & Diverse Datasets** cho Non-discrimination); hiểu cơ chế **Embedding Classifier**, cùng các khái niệm **Red Teaming (`Garak`)**, **Accountability** và các khung quản trị quốc tế (**NIST AI RMF, EU AI Act**).
 
 ---
 
@@ -27,8 +27,8 @@ flowchart TD
    * *Tại sao LLM lại bị Hallucination?* Vì về mặt toán học, LLM được huấn luyện để **dự đoán token tiếp theo có xác suất hợp lý nhất về mặt ngôn ngữ (Plausible-sounding continuation)** chứ bản thân nó không có một cơ sở dữ liệu kiểm chứng sự thật (Fact-checking database) nội tại!
    * **Intrinsic Hallucination (Ảo giác nội tại):** Câu trả lời của mô hình **mâu thuẫn trực tiếp** với đoạn tài liệu ngữ cảnh (Context) vừa được cung cấp trong Prompt (Ví dụ: Tài liệu RAG ghi *"Doanh thu quý 1 là 10 triệu USD"*, nhưng LLM lại tóm tắt là *"Doanh thu quý 1 đạt 50 triệu USD"*).
    * **Extrinsic Hallucination (Ảo giác ngoại lai):** Mô hình **tự bịa thêm các chi tiết, tên người, ngày tháng hoặc trích dẫn bài báo khoa học không hề tồn tại** trong tài liệu nguồn và không thể kiểm chứng được ngoài đời thực.
-   * *Cách khắc phục chuẩn:* Kết hợp **RAG (Grounding vào tài liệu chuẩn)** + Hạ thấp **Temperature ($T \to 0$)** + Yêu cầu mô hình trích dẫn nguồn và cho phép trả lời *"Tôi không biết dựa trên tài liệu được cung cấp"* + Dùng **NeMo Guardrails Fact-checking Rail**.
-2. **Các loại Thiên vị (Bias) trong Dữ liệu & Mô hình (Hay hỏi trong đề thi):**
+   * *Cách giảm thiểu chuẩn:* Kết hợp **RAG (Grounding vào tài liệu đáng tin cậy)** + Giảm **Temperature** để hạn chế độ ngẫu nhiên khi lấy mẫu (nhớ rằng `temperature=0` tự nó không đảm bảo tính đúng sự thật) + Yêu cầu mô hình trích dẫn nguồn và cho phép trả lời *"Tôi không biết dựa trên tài liệu được cung cấp"* + Dùng **NeMo Guardrails Fact-checking / Self-check Output Rail**.
+2. **Các loại Thiên vị (Bias) trong Dữ liệu & Mô hình (Khái niệm đáng ôn theo Blueprint):**
    * **Historical Bias (Thiên vị lịch sử):** Dữ liệu phản ánh những bất bình đẳng có thật trong quá khứ của xã hội (ví dụ: dữ liệu tuyển dụng 20 năm trước có ít nữ giới làm giám đốc kỹ thuật, khiến AI học theo và tự động trừ điểm hồ sơ của ứng viên nữ!).
    * **Representation / Sampling Bias (Thiên vị đại diện / lấy mẫu):** Tập dữ liệu huấn luyện thiếu hụt trầm trọng một nhóm dân cư hoặc ngôn ngữ (ví dụ: mô hình nhận diện khuôn mặt chỉ train trên ảnh người da trắng ở ánh sáng tốt nên nhận diện sai người da màu; hoặc LLM chỉ học tiếng Anh nên kém hiểu biết về văn hóa Việt Nam).
    * **Measurement & Labeling Bias (Thiên vị đo lường & gán nhãn):** Định kiến chủ quan của nhóm người được thuê gắn nhãn dữ liệu (Annotators) vô tình truyền vào mô hình.
@@ -66,10 +66,10 @@ flowchart TD
     end
 ```
 
-### Bảng đối chiếu Vàng (Học thuộc lòng 100% cho kỳ thi!):
+### Bảng đối chiếu 4 Trụ cột Trustworthy AI (Khái niệm đáng ôn theo Blueprint):
 | Trụ cột Trustworthy AI | Ý nghĩa cốt lõi | Giải pháp kỹ thuật tương ứng của NVIDIA |
 | :--- | :--- | :--- |
-| **1. Quyền riêng tư (Privacy)** | Bảo vệ dữ liệu cá nhân/nhạy cảm (GDPR, HIPAA, CCPA) và sở hữu trí tuệ của trọng số mô hình ngay cả trong lúc đang tính toán trên Cloud. | **NVIDIA Confidential Computing** (Phần cứng GPU **Hopper H100** & **Blackwell B200**) kết hợp lọc PII trong **NeMo Curator / Guardrails**. |
+| **1. Quyền riêng tư (Privacy)** | Bảo vệ dữ liệu cá nhân/nhạy cảm (GDPR, HIPAA, CCPA) và sở hữu trí tuệ của trọng số mô hình trong lúc đang tính toán (*data in use*). | **NVIDIA Confidential Computing** (Phần cứng GPU **Hopper H100** & **Blackwell B200**) kết hợp lọc PII trong **NeMo Curator / Guardrails**. |
 | **2. An toàn & Kiểm soát (Safety & Security)** | Ngăn chặn prompt độc hại (Jailbreak/Prompt Injection), kiểm soát chủ đề hội thoại và lọc ảo giác đầu ra. | **NVIDIA NeMo Guardrails** (cấu hình bằng ngôn ngữ kịch bản **Colang**) & quét lỗ hổng bằng **NVIDIA Garak**. |
 | **3. Tính minh bạch (Transparency & Explainability)** | Giải thích được nguyên nhân ra quyết định cho người dùng cuối/cơ quan quản lý và truy vết nguồn gốc dữ liệu. | **Data Lineage Tracking** (Truy vết dòng chảy dữ liệu), **Model Cards** & **Explainable AI (XAI)** (như SHAP, LIME, Attention Maps). |
 | **4. Không phân biệt đối xử (Non-discrimination & Fairness)** | Loại bỏ định kiến giới tính/văn hóa/chủng tộc, cân bằng các nhóm dữ liệu thiểu số trong tập huấn luyện. | Đa dạng hóa tập dữ liệu (**Diverse & Representative Datasets**) kết hợp **Data Augmentation** (Tăng cường dữ liệu). |
@@ -80,24 +80,24 @@ flowchart TD
 
 > [!TIP]
 > **Góc nhìn Developer Bảo mật (3 Trạng thái của Dữ liệu):**
-> 1. **Data at Rest (Dữ liệu lưu trên ổ cứng):** Đã có mã hóa ổ đĩa AES-256.
-> 2. **Data in Transit (Dữ liệu truyền qua mạng):** Đã có mã hóa TLS / HTTPS / IPsec.
-> 3. **Data in Use (Dữ liệu đang nạp vào RAM/VRAM để tính toán):** Bình thường bắt buộc phải giải mã ra dạng rõ (Plaintext) nên quản trị viên Cloud hoặc mã độc chiếm quyền `root` trên máy chủ vật lý có thể đọc trộm!
-> 👉 **NVIDIA Confidential Computing** lấp đầy lỗ hổng cuối cùng này: **Bảo vệ và cô lập dữ liệu cùng trọng số mô hình ngay trong lúc đang tính toán (Data in Use)!**
+> 1. **Data at Rest (Dữ liệu lưu trên ổ cứng):** Bảo vệ bằng mã hóa lưu trữ (như AES-256).
+> 2. **Data in Transit (Dữ liệu truyền qua mạng):** Bảo vệ bằng mã hóa đường truyền (TLS / HTTPS / IPsec).
+> 3. **Data in Use (Dữ liệu đang nạp vào RAM/VRAM để tính toán):** Trên hạ tầng thông thường, dữ liệu đang xử lý trong bộ nhớ ở dạng rõ (plaintext), tạo ra rủi ro nếu tầng quản trị máy chủ vật lý hoặc hypervisor bị xâm phạm.
+> 👉 **NVIDIA Confidential Computing** bổ sung lớp bảo vệ cho trạng thái thứ ba này: **Tăng khả năng bảo vệ dữ liệu và trọng số mô hình khi đang được xử lý (Data in Use)!**
 
-* **Cơ chế hoạt động kỹ thuật:**
-  * Xử lý dữ liệu nhạy cảm và trọng số mô hình độc quyền bên trong một vùng môi trường thực thi đáng tin cậy được cách ly và mã hóa hoàn toàn bằng vi mạch phần cứng, gọi là **Hardware-based Trusted Execution Environment (TEE / Hardware Enclave)** kết hợp giữa CPU hỗ trợ TEE (như AMD SEV-SNP / Intel TDX / Arm CCA) và **GPU NVIDIA Hopper (H100) / Blackwell (B200)**.
-  * Toàn bộ dữ liệu truyền qua bus PCIe hay NVLink giữa các GPU đều được mã hóa phần cứng tốc độ cao, kèm cơ chế xác thực từ xa (**Remote Attestation**) giúp khách hàng kiểm chứng mật mã xem phần cứng GPU và firmware có bị can thiệp hay không trước khi gửi khóa giải mã.
-* **Mức độ bảo vệ tuyệt đối:** Ngay cả nhà cung cấp dịch vụ đám mây (**Cloud Service Provider - CSP**), quản trị viên hệ thống (Cloud Admin), nhân viên vật lý tại trung tâm dữ liệu, hệ điều hành máy chủ (Host OS / Hypervisor) hay phần mềm độc hại cấp `root` cũng **tuyệt đối không thể nhìn thấy, trích xuất hoặc sửa đổi** dữ liệu bệnh án/tài chính và trọng số mô hình đang chạy bên trong GPU!
+* **Cơ chế hoạt động kỹ thuật & Threat Model:**
+  * Xử lý dữ liệu nhạy cảm và trọng số mô hình bên trong môi trường thực thi đáng tin cậy dựa trên phần cứng (**Hardware-based Trusted Execution Environment - TEE**), kết hợp giữa CPU hỗ trợ TEE (như AMD SEV-SNP / Intel TDX / Arm CCA) và **GPU NVIDIA Hopper (H100) / Blackwell (B200)**.
+  * Dữ liệu truyền qua bus PCIe hoặc NVLink (tùy cấu hình multi-GPU TEE) được mã hóa, kèm cơ chế xác thực từ xa (**Remote Attestation**) giúp xác minh cấu hình phần cứng/firmware trước khi cấp khóa.
+  * **Lưu ý giới hạn & Threat Model:** NVIDIA Confidential Computing giúp giảm thiểu rủi ro truy cập trái phép từ phía hạ tầng bên dưới (như host OS/hypervisor hoặc quản trị viên hạ tầng không được ủy quyền) đối với **data in use**. Tuy nhiên, **phạm vi bảo vệ phụ thuộc vào threat model, cấu hình phần cứng/phần mềm, quy trình quản lý khóa (key management) và attestation**. Nó **không thay thế** cho kiểm soát truy cập ứng dụng (access controls), thiết kế phần mềm an toàn, lọc đầu vào/đầu ra (Guardrails), ghi nhật ký kiểm toán (audit logging), quản lý lỗ hổng bảo mật hay đảm bảo chống lại mọi cuộc tấn công ở tầng ứng dụng/API.
 
 ---
 
 ## 4. Rào chắn Bảo vệ Ứng dụng LLM: NVIDIA NeMo Guardrails & ngôn ngữ Colang
 
-**NVIDIA NeMo Guardrails** là bộ công cụ mã nguồn mở đóng vai trò như một lớp **"Tường lửa thông minh khả trình (Programmable AI Firewall)"** nằm kẹp giữa Người dùng, các Công cụ ngoài và Mô hình LLM, được định nghĩa thông qua ngôn ngữ mô hình hóa luồng hội thoại chuyên dụng gọi là **Colang (Conversational Modeling Language)**.
+**NVIDIA NeMo Guardrails** là bộ công cụ mã nguồn mở đóng vai trò như một lớp **"Rào chắn an toàn khả trình (Programmable AI Guardrails)"** nằm giữa Người dùng, các Công cụ ngoài và Mô hình LLM, được định nghĩa thông qua ngôn ngữ mô hình hóa luồng hội thoại **Colang (Conversational Modeling Language)**.
 
 ### 4.1. Năm loại Rào chắn (5 Types of Programmable Rails) trong NeMo Guardrails
-Trong tài liệu chính thức của NVIDIA, NeMo Guardrails bảo vệ ứng dụng tại **5 chốt chặn** xuyên suốt vòng đời một request:
+Theo tài liệu chính thức của NVIDIA ([NeMo Guardrails — Rail Types](https://docs.nvidia.com/nemo/guardrails/latest/about-nemo-guardrails-library/rail-types)), NeMo Guardrails hỗ trợ **5 loại chốt chặn (Rails)** xuyên suốt vòng đời một request:
 
 ```mermaid
 flowchart LR
