@@ -169,14 +169,21 @@ flowchart TD
         R1 --> R2 --> R3
     end
 
-    subgraph M3["3. Cosine Similarity & BERTScore (Độ tương đồng Ngữ nghĩa Vector)"]
-        C1["🎯 Bài toán: So khớp Vector Embedding (Semantic Retrieval) & Tương đồng ngữ nghĩa"]
-        C2["🔍 Bản chất: Đo cô-sin góc giữa 2 Vector Embedding trong không gian đa chiều<br/>Lưu ý: Cosine similarity đo độ gần gũi giữa các vector, KHÔNG trực tiếp đảm bảo câu trả lời RAG cuối cùng đúng sự thật!"]
-        C3["📏 Thang điểm: -1.0 đến 1.0 (1.0 = Cùng hướng vector)"]
+    subgraph M3["3. Sentence-Level Cosine Similarity (Tương đồng Vector Cấp Câu/Đoạn)"]
+        C1["🎯 Bài toán: Tìm kiếm Vector (Semantic Retrieval) & So sánh độ gần cấp câu/đoạn"]
+        C2["🔍 Bản chất: Nén toàn bộ câu/đoạn thành 1 vector đại diện duy nhất<br/>rồi tính cô-sin góc giữa 2 vector câu (Lưu ý: KHÔNG trực tiếp đảm bảo câu trả lời RAG đúng sự thật!)"]
+        C3["📏 Thang điểm: -1.0 đến 1.0 (1.0 = Hai vector cùng hướng)"]
         C1 --> C2 --> C3
     end
 
-    Metrics --> M1 & M2 & M3
+    subgraph M4["4. BERTScore (So khớp Contextual Embeddings Cấp Token)"]
+        BS1["🎯 Bài toán: Đánh giá chất lượng văn bản sinh ra (Generation Evaluation) nhạy ngữ nghĩa"]
+        BS2["🔍 Bản chất: Giữ nguyên vector ngữ cảnh của TỪNG TOKEN trong câu mẫu & câu AI,<br/>so khớp cực đại từng cặp token (greedy matching) để tính Precision, Recall và F1"]
+        BS3["📏 Đầu ra: P_BERT, R_BERT, F_BERT (có thể kèm trọng số IDF)"]
+        BS1 --> BS2 --> BS3
+    end
+
+    Metrics --> M1 & M2 & M3 & M4
 ```
 
 1. **BLEU (Bilingual Evaluation Understudy) $\to$ DỊCH MÁY (Machine Translation):**
@@ -188,10 +195,17 @@ flowchart TD
      * **ROUGE-1:** Độ trùng khớp từng từ đơn (Unigrams).
      * **ROUGE-2:** Độ trùng khớp từng cặp 2 từ liên tiếp (Bigrams).
      * **ROUGE-L:** Dựa trên **Chuỗi con chung dài nhất (Longest Common Subsequence - LCS)** để đánh giá cấu trúc mạch câu mà không đòi hỏi các từ phải đứng sát cạnh nhau.
-3. **Hạn chế của BLEU & ROUGE và Giải pháp `BERTScore` / `Cosine Similarity`:**
-   * Vì BLEU và ROUGE chỉ **đếm sự trùng khớp mặt chữ (Exact lexical / n-gram overlap)**, nên nếu đáp án mẫu là *"Chiếc xe hơi chạy rất nhanh"* mà AI viết là *"Chiếc ô tô di chuyển với tốc độ cao"*, điểm BLEU/ROUGE sẽ rất thấp dù hai câu tương đương về nghĩa.
-   * **Giải pháp – `BERTScore` & `Cosine Similarity`:** Đưa câu của AI và câu mẫu qua mô hình Embedding rồi tính **Cosine Similarity** giữa các vector nhúng để đo **độ tương đồng về mặt ngữ nghĩa (Semantic Similarity)**:
-     $$\text{Cosine Similarity}(\mathbf{A}, \mathbf{B}) = \cos(\theta) = \frac{\mathbf{A} \cdot \mathbf{B}}{\|\mathbf{A}\| \|\mathbf{B}\|}$$
+3. **Hạn chế của BLEU & ROUGE và Sự khác biệt giữa `Sentence Embedding Cosine Similarity` vs. `BERTScore`:**
+   * Vì BLEU và ROUGE chỉ **đếm sự trùng khớp mặt chữ (Exact lexical / n-gram overlap)**, nên nếu đáp án mẫu là *"Chiếc xe hơi chạy rất nhanh"* mà AI viết là *"Chiếc ô tô di chuyển với tốc độ cao"*, điểm BLEU/ROUGE sẽ rất thấp dù hai câu tương đương về nghĩa. Để đánh giá tương đồng ngữ nghĩa bằng biểu diễn vector, cần **phân biệt rõ hai phương pháp khác nhau** sau đây:
+   * **Phương pháp A – `Sentence-level Embedding Cosine Similarity` (So sánh Vector cấp câu/đoạn văn):**
+     * Sử dụng mô hình Sentence/Document Embedding (như Bi-Encoder, Sentence-BERT, `NV-Embed`) để gộp (pooling) toàn bộ câu hoặc đoạn văn thành **một vector đại diện duy nhất** ($\mathbf{u}$ và $\mathbf{v}$), sau đó tính cô-sin góc giữa hai vector cấp câu đó:
+       $$\text{Cosine Similarity}(\mathbf{u}, \mathbf{v}) = \cos(\theta) = \frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\| \|\mathbf{v}\|}$$
+     * *Ứng dụng chính:* Tìm kiếm tài liệu tương đồng tốc độ cao trong cơ sở dữ liệu Vector (Semantic Search / Dense Retrieval trong RAG), phân cụm văn bản hoặc lọc câu hỏi tương tự.
+   * **Phương pháp B – `BERTScore` (So khớp Contextual Embeddings ở cấp độ Token — Zhang et al., ICLR 2020):**
+     * Khác với việc nén cả câu thành một vector đơn lẻ, **BERTScore** đưa câu tham chiếu $x = \langle x_1, \dots, x_k \rangle$ và câu ứng viên của AI $\hat{x} = \langle \hat{x}_1, \dots, \hat{x}_m \rangle$ qua mô hình ngôn ngữ (như BERT/RoBERTa/DeBERTa) để lấy chuỗi **contextual token embeddings** cho **từng token** $\langle \mathbf{x}_1, \dots, \mathbf{x}_k \rangle$ và $\langle \hat{\mathbf{x}}_1, \dots, \hat{\mathbf{x}}_m \rangle$ (đã chuẩn hóa độ dài $L_2$).
+     * Tiếp theo, BERTScore tính độ tương đồng cosine giữa mọi cặp token $\mathbf{x}_i^\top \hat{\mathbf{x}}_j$, thực hiện **so khớp cực đại (greedy matching)** từ từng token trong câu này sang token gần nghĩa nhất ở câu kia để tính **Precision ($P_{\text{BERT}}$), Recall ($R_{\text{BERT}}$) và F1 ($F_{\text{BERT}}$)** (có thể nhân thêm trọng số độ hiếm của từ theo IDF):
+       $$R_{\text{BERT}} = \frac{1}{|x|} \sum_{\mathbf{x}_i \in x} \max_{\hat{\mathbf{x}}_j \in \hat{x}} \mathbf{x}_i^\top \hat{\mathbf{x}}_j, \qquad P_{\text{BERT}} = \frac{1}{|\hat{x}|} \sum_{\hat{\mathbf{x}}_j \in \hat{x}} \max_{\mathbf{x}_i \in x} \mathbf{x}_i^\top \hat{\mathbf{x}}_j, \qquad F_{\text{BERT}} = 2 \frac{P_{\text{BERT}} \cdot R_{\text{BERT}}}{P_{\text{BERT}} + R_{\text{BERT}}}$$
+     * *Điểm khác biệt cốt lõi cần nhớ:* **Sentence embedding cosine similarity** so sánh **hai vector đại diện cho toàn bộ câu/đoạn**, trong khi **BERTScore** so khớp các **contextual embeddings ở cấp token** rồi tổng hợp thành **Precision, Recall và F1**.
 4. **Đánh giá toàn diện hệ thống RAG (Retrieval + Grounding + Answer + System Metrics):**
    > [!IMPORTANT]
    > **Lưu ý quan trọng:** `Cosine Similarity` chỉ đo độ tương đồng giữa các vector embedding (thường dùng trong bước tìm kiếm vector của RAG); nó **không trực tiếp đánh giá độ chính xác hay tính trung thực của câu trả lời cuối cùng**.
@@ -245,7 +259,8 @@ flowchart TD
 > 1. **Ghép cặp Metric Ngôn ngữ & RAG:**
 >    * Dịch thuật (Machine Translation) $\leftrightarrow$ **BLEU** (Precision-oriented trên n-gram).
 >    * Tóm tắt (Text Summarization) $\leftrightarrow$ **ROUGE** (Recall-oriented trên n-gram/LCS).
->    * Độ tương đồng giữa hai vector nhúng (Vector Similarity) $\leftrightarrow$ **Cosine Similarity**.
+>    * Độ tương đồng giữa hai vector đại diện cả câu/đoạn (Sentence/Chunk Vector Similarity) $\leftrightarrow$ **Cosine Similarity**.
+>    * Đánh giá tương đồng ngữ nghĩa văn bản sinh ra bằng so khớp contextual embeddings ở **cấp độ token** (tính Precision, Recall, F1) $\leftrightarrow$ **BERTScore**.
 >    * Đánh giá hệ thống **RAG đầu-cuối (End-to-end RAG)**: Phải kết hợp **Retrieval metrics** (`Recall@k`, `MRR`, `nDCG`), **Faithfulness/Grounding** và **Answer Correctness/Relevance** (không chỉ nhìn vào Cosine Similarity).
 > 2. **Lưu ý Imbalanced Data (Dữ liệu mất cân bằng):** Khi tập dữ liệu có 98% nhãn A và chỉ 2% nhãn B, độ đo **Accuracy** dễ gây hiểu lầm. Hãy chọn metric theo **chi phí của False Positives (FP) và False Negatives (FN)**:
 >    * Khi bỏ sót ca dương tính (**False Negative**) gây hậu quả nghiêm trọng (sàng lọc bệnh, phát hiện gian lận/xâm nhập) $\to$ Ưu tiên **Recall** (trong ngưỡng FP chấp nhận được).

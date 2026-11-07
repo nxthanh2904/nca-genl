@@ -36,26 +36,33 @@ flowchart TD
 ## 2. Layer 1: Phần cứng chuyên dụng – NVIDIA DGX, MIG, Grace CPU & Base Command
 
 ### 2.1. Dòng siêu máy tính AI: NVIDIA DGX Systems & Sự tiến hóa Kiến trúc GPU
-**NVIDIA DGX** là dòng máy chủ/siêu máy tính chuyên dụng được NVIDIA thiết kế tối ưu hóa toàn diện (tích hợp sẵn 8 GPU kết nối qua NVLink/NVSwitch, card mạng InfiniBand tốc độ cao, ổ cứng NVMe RAID và phần mềm chuẩn hóa) cho các tác vụ huấn luyện và suy luận AI/DL nặng nhất:
+**NVIDIA DGX** là dòng hệ thống máy chủ, máy trạm và siêu máy tính AI chuyên dụng được NVIDIA thiết kế đồng bộ toàn diện (kết hợp GPU kết nối qua NVLink/NVSwitch, card mạng InfiniBand/Spectrum-X tốc độ cao, ổ cứng NVMe và ngăn xếp phần mềm chuẩn hóa) cho các tác vụ huấn luyện và suy luận AI/DL quy mô lớn.
+
+> [!NOTE]
+> **Lưu ý về cấu hình phần cứng theo từng dòng hệ thống (Không phải mọi hệ thống đều cố định 8 GPU):**
+> * **DGX-1 (2016):** Tích hợp **8 GPU** (Pascal P100, sau có bản V100) kết nối theo cấu trúc Hybrid Cube-Mesh NVLink.
+> * **DGX-2 (2018):** Tích hợp **16 GPU Volta V100** trong một hệ thống duy nhất, lần đầu tiên giới thiệu chip chuyển mạch **NVSwitch** kết nối toàn diện 16 GPU.
+> * **DGX A100 (2020), DGX H100 / H200 (2022–2023) & DGX B200 (2024+):** Các dòng máy chủ (server baseboard) tiêu chuẩn tích hợp **8 GPU** (A100, H100/H200 hoặc Blackwell B200) kết nối All-to-All qua **NVLink & NVSwitch**. *(Bên cạnh đó, dòng máy trạm **DGX Station** như DGX Station A100 được trang bị **4 GPU**).*
+> * **GB200 NVL72 (2024+):** Hệ thống quy mô toàn tủ rack (**Rack-scale system** làm mát bằng chất lỏng) kết hợp **36 Grace CPU và 72 Blackwell GPU** (từ 36 siêu chip Grace Blackwell GB200) liên kết qua hệ thống NVLink Switch thành một miền bộ nhớ NVLink khổng lồ duy nhất gồm **72 GPU**.
 
 ```mermaid
 flowchart LR
-    D1["2016: DGX-1<br/>GPU Pascal P100<br/>Khai sinh dòng DGX"]
-    D2["2017-2018: DGX-2<br/>GPU Volta V100<br/>Ra mắt Tensor Cores & NVSwitch"]
-    D3["2020: DGX A100<br/>GPU Ampere A100<br/>TF32, BF16, MIG & 2:4 Sparsity"]
-    D4["2022-2023: DGX H100 / H200<br/>GPU Hopper<br/>Transformer Engine (FP8)<br/>& Confidential Computing"]
-    D5["2024+: DGX B200 / GB200 NVL72<br/>GPU Blackwell<br/>FP4/FP6, NVLink thế hệ 5 (1.8 TB/s)<br/>Làm mát chất lỏng toàn Rack"]
+    D1["2016: DGX-1<br/>8x GPU Pascal P100<br/>Khai sinh dòng DGX"]
+    D2["2018: DGX-2<br/>16x GPU Volta V100<br/>Ra mắt Tensor Cores & NVSwitch"]
+    D3["2020: DGX A100<br/>8x GPU Ampere A100<br/>TF32, BF16, MIG & 2:4 Sparsity"]
+    D4["2022-2023: DGX H100 / H200<br/>8x GPU Hopper<br/>Transformer Engine (FP8)<br/>& Confidential Computing"]
+    D5["2024+: DGX B200 (8x GPU) &<br/>GB200 NVL72 (36 Grace + 72 GPU)<br/>FP4/FP6, NVLink Gen 5 (1.8 TB/s)"]
 
     D1 --> D2 --> D3 --> D4 --> D5
 ```
 
-| Thế hệ Kiến trúc GPU | Dòng GPU Tiêu biểu | Đột phá Công nghệ Quan trọng Cần Nhớ Cho Kỳ Thi |
+| Thế hệ Kiến trúc GPU | Dòng GPU & Hệ thống Tiêu biểu | Đột phá Công nghệ Quan trọng Cần Nhớ Cho Kỳ Thi |
 | :--- | :--- | :--- |
-| **1. Volta (2017)** | Tesla V100 | Thế hệ GPU đầu tiên giới thiệu nhân **Tensor Cores** chuyên dụng cho phép nhân ma trận Deep Learning (`FP16`) và chip chuyển mạch **NVSwitch**. |
-| **2. Ampere (2020)** | A100 (40GB / 80GB) | Giới thiệu định dạng **`TF32`**, **`BF16`**, **2:4 Structured Sparsity** và công nghệ chia nhỏ phần cứng GPU **MIG (Multi-Instance GPU)**. |
-| **3. Ada Lovelace (2022)** | L4, L40S, RTX 4090 | Tối ưu hóa cho suy luận đa phương thức (Inference), đồ họa Omniverse, dựng hình 3D và xử lý Video/AI tiêu thụ ít điện năng. |
-| **4. Hopper (2022–2023)** | H100 (80GB), H200 (141GB HBM3e) | Giới thiệu **Transformer Engine** (tự động chuyển đổi động giữa **`FP8`** và `FP16`/`BF16`), **NVIDIA Confidential Computing (TEE)**, và NVLink thế hệ 4 (900 GB/s). |
-| **5. Blackwell (2024+)** | B200, GB200 NVL72 | Thế hệ Transformer Engine thứ 2 hỗ trợ lượng tử hóa **`FP4` / `FP6`**, NVLink thế hệ 5 (**1.8 TB/s**), kết nối 72 GPU Blackwell như một GPU khổng lồ duy nhất trong 1 Rack làm mát bằng chất lỏng (**GB200 NVL72**). |
+| **1. Volta (2017–2018)** | Tesla V100 (**DGX-1 V100** 8x GPU, **DGX-2** 16x GPU) | Thế hệ GPU đầu tiên giới thiệu nhân **Tensor Cores** chuyên dụng cho phép nhân ma trận Deep Learning (`FP16`) và chip chuyển mạch **NVSwitch** (trên DGX-2). |
+| **2. Ampere (2020)** | A100 40GB/80GB (**DGX A100** 8x GPU, **DGX Station A100** 4x GPU) | Giới thiệu định dạng **`TF32`**, **`BF16`**, **2:4 Structured Sparsity** và công nghệ chia nhỏ phần cứng GPU **MIG (Multi-Instance GPU)**. |
+| **3. Ada Lovelace (2022)** | L4, L40S, RTX 6000 Ada, RTX 4090 | Tối ưu hóa cho suy luận đa phương thức (Inference), đồ họa Omniverse, dựng hình 3D và xử lý Video/AI hiệu suất/điện năng cao. |
+| **4. Hopper (2022–2023)** | H100 (80GB), H200 (141GB HBM3e) (**DGX H100 / H200** 8x GPU, **GH200**) | Giới thiệu **Transformer Engine** (tự động chuyển đổi động giữa **`FP8`** và `FP16`/`BF16`), **NVIDIA Confidential Computing (TEE)**, và NVLink thế hệ 4 (900 GB/s). |
+| **5. Blackwell (2024+)** | **DGX B200** (8x B200 GPU), **GB200 NVL72** (Rack-scale: 36 Grace CPU + 72 Blackwell GPU) | Thế hệ Transformer Engine thứ 2 hỗ trợ lượng tử hóa **`FP4` / `FP6`**, NVLink thế hệ 5 (**1.8 TB/s** mỗi GPU), kết nối 72 GPU Blackwell và 36 Grace CPU trong một Rack làm mát bằng chất lỏng (**GB200 NVL72**). |
 
 ### 2.2. Công nghệ Chia nhỏ GPU: MIG (Multi-Instance GPU)
 * **Vấn đề thực tế:** Một chiếc GPU Data Center lớn như A100/H100 80GB có thể dư thừa tài nguyên nếu chỉ dùng để chạy một mô hình nhỏ (như BERT hoặc SLM nhỏ) hoặc phục vụ nhiều kỹ sư cùng chạy thực nghiệm nhẹ. Nếu cho nhiều tiến trình chạy chung trên 1 GPU theo chế độ mặc định, tiến trình này ngốn băng thông bộ nhớ có thể ảnh hưởng độ trễ của tiến trình kia (**Noisy Neighbor problem**).

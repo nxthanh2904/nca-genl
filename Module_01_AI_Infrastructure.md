@@ -171,12 +171,31 @@ Một câu hỏi rất phổ biến trong kỳ thi là sự khác biệt giữa 
 | **`INT8` / `INT4` (Integer)** | 8 / 4-bit | Số nguyên lượng tử hóa | Chuyên dùng cho **Suy luận (Inference Quantization - PTQ/AWQ/GPTQ)** hoặc nén mô hình gốc trong **QLoRA (`NF4`)**, giúp giảm 4x–8x dung lượng VRAM so với FP32. |
 
 > [!TIP]
-> **Công thức tính nhẩm nhanh dung lượng VRAM cho Trọng số LLM (Rất hữu ích cho Developer & Phòng thi):**
-> * Ở chuẩn **`FP32` (4 bytes/param):** Mô hình $N$ tỷ tham số cần $\approx \mathbf{4N}\text{ GB VRAM}$. (VD: 7B cần 28GB).
-> * Ở chuẩn **`FP16` / `BF16` (2 bytes/param):** Mô hình $N$ tỷ tham số cần $\approx \mathbf{2N}\text{ GB VRAM}$. (VD: 7B cần ~14GB; 70B cần ~140GB $\to$ phải dùng ít nhất 2 GPU H100 80GB).
-> * Ở chuẩn **`FP8` / `INT8` (1 byte/param):** Mô hình $N$ tỷ tham số cần $\approx \mathbf{1N}\text{ GB VRAM}$. (VD: 70B cần ~70GB $\to$ vừa khít 1 GPU H100 80GB!).
-> * Ở chuẩn **`INT4` / `NF4` (0.5 byte/param):** Mô hình $N$ tỷ tham số cần $\approx \mathbf{0.5N}\text{ GB VRAM}$. (VD: 70B chỉ cần ~35GB VRAM!).
-> *(Lưu ý: Khi chạy **Inference** thực tế, ngoài trọng số mô hình còn phải cộng thêm khoảng 15–20% VRAM cho **KV Cache** và Activations; còn khi **Full Fine-Tuning**, tổng VRAM cần gấp **3 đến 4 lần** trọng số vì phải lưu thêm Gradients và trạng thái Optimizer Adam!)*
+> **Công thức Ước lượng Dung lượng VRAM cho LLM (Trọng số, KV Cache khi Suy luận & Bộ nhớ khi Full Fine-Tuning):**
+> 
+> **1. Dung lượng VRAM chỉ tính riêng cho Trọng số Mô hình (Model Weights - $N$ tỷ tham số):**
+> * Ở chuẩn **`FP32` (4 bytes/param):** $\text{VRAM}_{\text{weights}} \approx \mathbf{4N}\text{ GB}$ *(VD: mô hình 8B cần ~32 GB)*.
+> * Ở chuẩn **`FP16` / `BF16` (2 bytes/param):** $\text{VRAM}_{\text{weights}} \approx \mathbf{2N}\text{ GB}$ *(VD: mô hình 8B cần ~16 GB; 70B cần ~140 GB $\to$ cần ít nhất 2 GPU H100 80GB)*.
+> * Ở chuẩn **`FP8` / `INT8` (1 byte/param):** $\text{VRAM}_{\text{weights}} \approx \mathbf{1N}\text{ GB}$ *(VD: 70B cần ~70 GB trọng số)*.
+> * Ở chuẩn **`INT4` / `NF4` (0.5 byte/param):** $\text{VRAM}_{\text{weights}} \approx \mathbf{0.5N}\text{ GB}$ *(VD: 70B cần ~35 GB trọng số)*.
+>
+> **2. Dung lượng VRAM cho `KV Cache` và Activations khi Suy luận (Inference):**
+> * **Không nên dùng một tỷ lệ % cố định** cho KV Cache, bởi dung lượng KV Cache phụ thuộc trực tiếp vào **độ dài ngữ cảnh ($S$)**, **kích thước lô ($B$)**, **số tầng ($L$)**, **số đầu Key/Value ($n_{\text{kv\_heads}}$ — khác biệt rất lớn giữa MHA và GQA/MQA)**, **số chiều mỗi đầu ($d_{\text{head}}$)** và **kiểu dữ liệu của KV Cache ($b_{\text{kv}}$ bytes/phần tử)**:
+>   $$\text{VRAM}_{\text{KV Cache}} = 2 \times B \times S \times L \times n_{\text{kv\_heads}} \times d_{\text{head}} \times b_{\text{kv}}\text{ (bytes)}$$
+>   *(Hệ số $2$ tương ứng với hai tensor Key và Value).*
+> * **Ví dụ tính thực tế (Mô hình 8B kiểu LLaMA-3 dùng GQA ở `BF16`):** Giả sử $L = 32$ tầng, $n_{\text{kv\_heads}} = 8$ đầu KV (nhờ GQA nén từ 32 đầu Query), $d_{\text{head}} = 128$, $b_{\text{kv}} = 2\text{ bytes}$ (`BF16`):
+>   * Mỗi token tiêu tốn: $2 \times 32 \times 8 \times 128 \times 2 = 131,072\text{ bytes} \approx \mathbf{0.125\text{ MB/token}}$.
+>   * Với `batch_size` $B = 1$, ngữ cảnh ngắn $S = 4,096$ tokens: $\text{KV Cache} \approx 0.5\text{ GB}$ ($\implies$ tổng VRAM Inference $\approx 16\text{ GB (Weights)} + 0.5\text{ GB (KV)} + \sim 1.5\text{ GB (Activations/CUDA context)} \approx \mathbf{18\text{ GB}}$).
+>   * Ngược lại, khi phục vụ nhiều người dùng với $B = 16$ và ngữ cảnh dài $S = 32,768$ tokens: $\text{KV Cache} \approx 16 \times 32,768 \times 0.125\text{ MB} = \mathbf{64\text{ GB}}$ (lớn gấp 4 lần dung lượng trọng số 16 GB!). Nếu mô hình dùng MHA truyền thống ($n_{\text{kv\_heads}} = 32$) thì KV Cache ở cấu hình này sẽ lên tới **256 GB**.
+>
+> **3. Ngân sách Bộ nhớ (Memory Budget) khi `Full Fine-Tuning` với Mixed Precision (`BF16`/`FP16`) và Optimizer `Adam` / `AdamW`:**
+> * Khi huấn luyện toàn bộ $N$ tỷ tham số bằng `AdamW` chuẩn (có lưu `FP32` master weights), tổng VRAM không chỉ gấp vài lần trọng số một cách chung chung mà bao gồm 4 thành phần cụ thể:
+>   1. **Trọng số mô hình (Model Weights ở `BF16`/`FP16`):** $2N\text{ bytes}$.
+>   2. **Đạo hàm (Gradients ở `BF16`/`FP16`):** $2N\text{ bytes}$ (hoặc $4N\text{ bytes}$ nếu tích lũy ở `FP32`).
+>   3. **Trạng thái Optimizer `AdamW` (ở `FP32`):** Bản sao Master Weights ($4N$) + Momentum bậc 1 $m_t$ ($4N$) + Variance bậc 2 $v_t$ ($4N$) $= \mathbf{12N\text{ bytes}}$.
+>   4. **Activations trung gian & Bộ đệm tạm (Temporary Buffers):** Tăng theo $B \times S \times L \times d_{\text{model}}$ (có thể giảm mạnh nhờ kỹ thuật **Activation / Gradient Checkpointing**).
+> * **Ví dụ Memory Budget cho mô hình $N = 8\text{B}$ tham số (Mixed Precision `BF16` + `AdamW`):**
+>   * Riêng phần bộ nhớ tĩnh (Weights + Gradients + Optimizer States) đã cần: $(2 + 2 + 12) \times 8\text{B} = 16 \times 8\text{B} \approx \mathbf{128\text{ GB VRAM}}$ (tức **gấp ~8 lần** dung lượng trọng số `BF16` 16 GB, hay **gấp ~4 lần** nếu so với trọng số `FP32` 32 GB), và khi cộng thêm **Activations** (ví dụ $15\text{–}40+\text{ GB}$ tùy `batch_size` và `seq_len`) thì tổng VRAM thực tế thường vượt **145–170+ GB** (cần phân mảnh qua nhiều GPU bằng **ZeRO/FSDP** hoặc chuyển sang dùng **PEFT: LoRA / QLoRA**).
 
 ---
 
@@ -248,7 +267,7 @@ flowchart TD
 ### 4.2. Phân biệt Kết nối Nội bộ Máy chủ (NVLink) vs. Kết nối Giữa các Máy chủ (InfiniBand & Spectrum-X)
 Để các chiến lược song song trên không bị nghẽn mạng, NVIDIA sử dụng 2 tầng kết nối tốc độ cao:
 1. **Bên trong cùng 1 máy chủ (Intra-node / Scale-up): NVLink & NVSwitch**
-   * Thay vì để 8 chiếc GPU trong cùng một thùng máy DGX nói chuyện với nhau qua khe cắm PCIe chật hẹp (PCIe Gen5 chỉ đạt ~128 GB/s hai chiều), **NVLink** và chip chuyển mạch **NVSwitch** nối trực tiếp mọi GPU với nhau theo cấu trúc All-to-All với băng thông lên tới **900 GB/s (trên Hopper H100)** và **1.8 TB/s (trên Blackwell B200)** — nhanh gấp 7 đến 14 lần PCIe, biến 8 GPU thành một "siêu GPU" với bể bộ nhớ VRAM dùng chung!
+   * Thay vì để các GPU trong một node máy chủ (ví dụ 8 GPU trên một baseboard DGX H100/B200) giao tiếp với nhau qua khe cắm PCIe chật hẹp (PCIe Gen5 chỉ đạt ~128 GB/s hai chiều), **NVLink** và chip chuyển mạch **NVSwitch** nối trực tiếp mọi GPU với nhau theo cấu trúc All-to-All với băng thông lên tới **900 GB/s (trên Hopper H100)** và **1.8 TB/s (trên Blackwell B200)** — nhanh gấp 7 đến 14 lần PCIe, biến các GPU trong miền NVLink thành một "siêu GPU" với bể bộ nhớ VRAM dùng chung!
 2. **Giữa các máy chủ khác nhau trong cụm Cluster (Inter-node / Scale-out): InfiniBand, Spectrum-X & GPUDirect RDMA**
    * **Ẩn dụ Đường bộ (Ethernet chuẩn) vs. Đường ray tàu cao tốc Shinkansen (InfiniBand):**
      * **Ethernet truyền thống (TCP/IP):** Thiết kế kiểu "Best-effort", kiểm soát gói tin qua ngăn xếp TCP/IP của hệ điều hành gây **overhead CPU cao**, **độ trễ lớn**, dễ xảy ra nghẽn cổ chai (packet drop) khi hàng trăm máy chủ bắn dữ liệu cùng một mili-giây (hiện tượng *Incast congestion*).
