@@ -27,31 +27,37 @@
     <!-- TOP NAVIGATION -->
     <header class="topbar">
         <div class="brand">
-            <button class="icon-btn" id="toggleSidebarBtn" title="Ẩn/Hiện danh mục Module">☰</button>
+            <button class="icon-btn" id="toggleSidebarBtn" title="Ẩn/Hiện danh mục Module" aria-label="Danh mục tài liệu" aria-controls="sidebarLeft" aria-expanded="true">☰</button>
             <div class="brand-logo">NV</div>
-            <div>
+            <div class="brand-copy">
                 <span class="brand-title-text">NCA-GENL Master Hub</span>
                 <span class="brand-badge">Custom Visual Diagrams</span>
             </div>
         </div>
 
-        <nav class="nav-tabs" id="mainNavTabs">
+        <nav class="nav-tabs" id="mainNavTabs" aria-label="Chế độ học tập">
             <button class="nav-tab active" data-view="reader">📖 <span class="tab-label">Đọc Tài Liệu (13 File)</span><span class="tab-short">Tài Liệu</span></button>
             <button class="nav-tab" data-view="mindmaps">🧠 <span class="tab-label">Bản Đồ Tư Duy (13 Mindmaps)</span><span class="tab-short">Mindmap</span></button>
-            <button class="nav-tab" data-view="diagrams">🏗️ <span class="tab-label">Sơ Đồ Quyết Định & VRAM Calc</span><span class="tab-short">Sơ Đồ & VRAM</span></button>
+            <button class="nav-tab" data-view="diagrams">🏗️ <span class="tab-label">Sơ Đồ Quyết Định & VRAM Calc</span><span class="tab-short">Sơ đồ</span></button>
             <button class="nav-tab" data-view="flashcards">⚡ <span class="tab-label">Flashcards Phản Xạ (20 Thẻ)</span><span class="tab-short">Flashcards</span></button>
             <button class="nav-tab" data-view="quiz">🎯 <span class="tab-label">Thi Thử 60 Phút (EN / VI & Practice 01)</span><span class="tab-short">Thi Thử</span></button>
         </nav>
 
         <div class="top-actions">
-            <div class="search-trigger" id="openSearchBtn" title="Tìm kiếm toàn bộ (Ctrl+K)">
+            <button class="search-trigger" id="openSearchBtn" title="Tìm kiếm toàn bộ (Ctrl+K)" aria-label="Tìm kiếm toàn bộ tài liệu">
                 <span>🔍<span class="search-text"> Tìm kiếm toàn bộ...</span></span>
                 <span class="kbd">Ctrl K</span>
-            </div>
-            <button class="icon-btn" id="fontDecBtn" title="Giảm cỡ chữ">A-</button>
-            <button class="icon-btn" id="fontIncBtn" title="Tăng cỡ chữ">A+</button>
-            <button class="icon-btn" id="widthToggleBtn" title="Mở rộng khung đọc">↔</button>
-            <button class="icon-btn" id="themeToggleBtn" title="Đổi giao diện Sáng/Tối">🌙</button>
+            </button>
+            <details class="reading-settings" id="readingSettings">
+                <summary class="icon-btn" title="Tùy chỉnh khung đọc" aria-label="Tùy chỉnh khung đọc">Aa</summary>
+                <div class="reading-settings-panel">
+                    <span>Cỡ chữ: <output id="fontSizeValue" aria-live="polite">16</output> px</span>
+                    <button class="icon-btn" id="fontDecBtn" title="Giảm cỡ chữ" aria-label="Giảm cỡ chữ">A−</button>
+                    <button class="icon-btn" id="fontIncBtn" title="Tăng cỡ chữ" aria-label="Tăng cỡ chữ">A+</button>
+                    <button class="icon-btn" id="widthToggleBtn" title="Mở rộng khung đọc" aria-label="Mở rộng khung đọc" aria-pressed="false">↔</button>
+                </div>
+            </details>
+            <button class="icon-btn" id="themeToggleBtn" title="Đổi giao diện Sáng/Tối" aria-label="Đổi giao diện Sáng/Tối">🌙</button>
         </div>
     </header>
 
@@ -60,7 +66,11 @@
         <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
         <!-- LEFT SIDEBAR: MODULE LIST -->
-        <aside class="sidebar-left" id="sidebarLeft">
+        <aside class="sidebar-left" id="sidebarLeft" aria-label="Danh mục tài liệu" tabindex="-1">
+            <div class="sidebar-heading">
+                <span>Tài liệu ôn tập</span>
+                <button class="icon-btn drawer-close" id="closeSidebarBtn" title="Đóng danh mục" aria-label="Đóng danh mục">✕</button>
+            </div>
             <div class="progress-box">
                 <div class="progress-header">
                     <span>Tiến độ ôn tập NCA-GENL</span>
@@ -79,10 +89,10 @@
         </main>
 
         <!-- RIGHT SIDEBAR: TABLE OF CONTENTS -->
-        <aside class="sidebar-right" id="sidebarRight">
-            <div class="toc-header" style="justify-content: space-between;">
-                <span>📑 MỤC LỤC TRANG HIỆN TẠI</span>
-                <button class="icon-btn" id="closeTocMobileBtn" style="width:26px; height:26px; font-size:0.75rem; display:none;" title="Đóng mục lục">✕</button>
+        <aside class="sidebar-right" id="sidebarRight" aria-label="Mục lục bài học" tabindex="-1">
+            <div class="toc-header">
+                <span>📑 Mục lục bài học</span>
+                <button class="icon-btn" id="closeTocMobileBtn" title="Ẩn mục lục" aria-label="Ẩn mục lục">✕</button>
             </div>
             <ul class="toc-list" id="tocList"></ul>
         </aside>
@@ -90,7 +100,7 @@
         <!-- MOBILE FLOATING ACTION BUTTONS (TOC & SCROLL TOP) -->
         <div class="mobile-fab-group" id="mobileFabGroup">
             <button class="mobile-fab" id="scrollTopFab" title="Lên đầu trang" onclick="document.getElementById('mainScroll').scrollTo({top:0, behavior:'smooth'})">↑ Đầu trang</button>
-            <button class="mobile-fab primary" id="openTocFab" title="Mục lục bài học">📑 Mục lục</button>
+            <button class="mobile-fab primary" id="openTocFab" title="Mục lục bài học" aria-controls="sidebarRight" aria-expanded="false">📑 Mục lục</button>
         </div>
     </div>
 

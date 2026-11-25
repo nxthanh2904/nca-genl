@@ -116,7 +116,7 @@
                 return `
                     <div class="cm-mindmap-visual">
                         <div class="cm-root-hub">
-                            <div style="font-size:1.5rem; margin-bottom:6px;">🎯</div>
+                            <div style="font-size: calc(var(--reading-font-size, 1rem) * 1.5); margin-bottom:6px;">🎯</div>
                             <div>${rootText}</div>
                         </div>
                         <div class="cm-branches-col">
@@ -1232,19 +1232,59 @@
             }
         }
 
+        // Keep these breakpoints aligned with the sidebar media queries.
+        const leftDrawerQuery = window.matchMedia('(max-width: 1024px)');
+        const tocDrawerQuery = window.matchMedia('(max-width: 1280px)');
+        let desktopSidebarCollapsed = false;
+        let desktopTocCollapsed = false;
+        let drawerReturnFocus = null;
+
+        function syncDrawerState() {
+            const previousFocus = document.activeElement;
+            const left = document.getElementById('sidebarLeft');
+            const right = document.getElementById('sidebarRight');
+            const leftVisible = !left.classList.contains('collapsed');
+            right.classList.toggle('collapsed', desktopTocCollapsed);
+            const rightVisible = currentView === 'reader' && (tocDrawerQuery.matches ? right.classList.contains('mobile-open') : !desktopTocCollapsed);
+            const activeDrawer = leftDrawerQuery.matches && leftVisible ? left : tocDrawerQuery.matches && rightVisible ? right : null;
+            left.inert = !leftVisible;
+            right.inert = !rightVisible;
+            left.setAttribute('aria-hidden', String(!leftVisible));
+            right.setAttribute('aria-hidden', String(!rightVisible));
+            document.getElementById('toggleSidebarBtn').setAttribute('aria-expanded', String(leftVisible));
+            document.getElementById('openTocFab').setAttribute('aria-expanded', String(rightVisible));
+            document.getElementById('mobileFabGroup').classList.toggle('toc-collapsed', currentView === 'reader' && desktopTocCollapsed);
+            document.getElementById('sidebarBackdrop').classList.toggle('active', !!activeDrawer);
+            document.querySelector('.topbar').inert = !!activeDrawer;
+            document.getElementById('mainScroll').inert = !!activeDrawer;
+            document.getElementById('mobileFabGroup').inert = !!activeDrawer;
+            // A drawer also blocks the other, docked sidebar on tablet.
+            if (activeDrawer === right) left.inert = true;
+            if (activeDrawer === left) right.inert = true;
+            if (activeDrawer && !activeDrawer.contains(document.activeElement)) {
+                drawerReturnFocus = previousFocus;
+                // Wait for the drawer to become visible before moving focus.
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    if (!activeDrawer.inert) activeDrawer.querySelector('.drawer-close').focus();
+                }));
+            } else if (!activeDrawer && drawerReturnFocus) {
+                if (drawerReturnFocus.isConnected && !drawerReturnFocus.closest('[inert]')) drawerReturnFocus.focus();
+                drawerReturnFocus = null;
+            }
+        }
+
         function closeMobileDrawers() {
-            if (window.innerWidth <= 860) {
+            if (leftDrawerQuery.matches) {
                 document.getElementById('sidebarLeft').classList.add('collapsed');
             }
             document.getElementById('sidebarRight').classList.remove('mobile-open');
-            document.getElementById('sidebarBackdrop').classList.remove('active');
+            syncDrawerState();
         }
 
         function syncMobileFabState() {
             const tocFab = document.getElementById('openTocFab');
-            const closeTocBtn = document.getElementById('closeTocMobileBtn');
             if (tocFab) tocFab.style.display = currentView === 'reader' ? 'flex' : 'none';
-            if (closeTocBtn) closeTocBtn.style.display = window.innerWidth <= 1100 ? 'flex' : 'none';
+            syncDrawerState();
         }
 
         function selectDocument(docId, scrollTargetText = null) {
@@ -1265,7 +1305,7 @@
                 <div class="mindmap-card">
                     <div class="mindmap-card-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
                         <div class="mindmap-card-title">🧠 SƠ ĐỒ TƯ DUY & TÓM TẮT CỐT LÕI (Bấm để Ẩn/Hiện nhanh)</div>
-                        <span style="font-size:0.78rem; color:var(--text-muted)">Tóm tắt trực quan toàn bộ trọng tâm thi của phần này ▼</span>
+                        <span style="font-size: calc(var(--reading-font-size, 1rem) * 0.78); color:var(--text-muted)">Tóm tắt trực quan toàn bộ trọng tâm thi của phần này ▼</span>
                     </div>
                     <div class="mindmap-card-body">
                         <div class="tree-mindmap">
@@ -1306,9 +1346,9 @@
                         <div class="module-hero-meta">
                             <span class="brand-badge">${doc.badge}</span>
                             <span class="domain-pill">Miền kiến thức: ${doc.domain}</span>
-                            <span style="font-size:0.8rem; color:var(--text-muted)">📄 File gốc: <code>${doc.file}</code></span>
+                            <span style="font-size: calc(var(--reading-font-size, 1rem) * 0.8); color:var(--text-muted)">📄 File gốc: <code>${doc.file}</code></span>
                         </div>
-                        <h2 style="font-size:1.35rem; font-weight:800; color:var(--text-primary);">${doc.icon} ${doc.shortTitle}</h2>
+                        <h2 style="font-size: calc(var(--reading-font-size, 1rem) * 1.35); font-weight:800; color:var(--text-primary);">${doc.icon} ${doc.shortTitle}</h2>
                     </div>
                     <button class="complete-btn ${isDone ? 'completed' : ''}" id="heroCompleteBtn" onclick="toggleComplete('${doc.id}')">
                         ${isDone ? '✓ Đã hoàn thành tài liệu này' : '○ Đánh dấu đã học xong'}
@@ -1378,10 +1418,7 @@
                     h.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     tocList.querySelectorAll('.toc-link').forEach(l => l.classList.remove('active'));
                     a.classList.add('active');
-                    if (window.innerWidth <= 1100) {
-                        document.getElementById('sidebarRight').classList.remove('mobile-open');
-                        document.getElementById('sidebarBackdrop').classList.remove('active');
-                    }
+                    if (tocDrawerQuery.matches) closeMobileDrawers();
                 };
                 li.appendChild(a);
                 tocList.appendChild(li);
@@ -1416,7 +1453,7 @@
                 <div class="module-hero">
                     <div>
                         <span class="brand-badge">BẢN ĐỒ TƯ DUY TOÀN DIỆN</span>
-                        <h2 style="font-size:1.5rem; font-weight:800; margin-top:6px;">🧠 Hệ Thống Mindmap Tổng Hợp Toàn Bộ 11 Modules & 5 Miền Kiến Thức</h2>
+                        <h2 style="font-size: calc(var(--reading-font-size, 1rem) * 1.5); font-weight:800; margin-top:6px;">🧠 Hệ Thống Mindmap Tổng Hợp Toàn Bộ 11 Modules & 5 Miền Kiến Thức</h2>
                         <p style="color:var(--text-secondary); margin-top:4px;">Nhìn toàn cảnh kiến thức NCA-GENL trên một trang duy nhất với sơ đồ nhánh hiện đại. Bấm vào từng Module để nhảy tới bài học.</p>
                     </div>
                 </div>
@@ -1424,7 +1461,7 @@
                 ${DOCS_DATA.map(doc => `
                     <div style="margin-bottom: 32px;">
                         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; flex-wrap:wrap; gap:10px;">
-                            <h3 style="color:var(--text-primary); font-size:1.15rem;">${doc.icon} ${doc.badge}: ${doc.shortTitle}</h3>
+                            <h3 style="color:var(--text-primary); font-size: calc(var(--reading-font-size, 1rem) * 1.15);">${doc.icon} ${doc.badge}: ${doc.shortTitle}</h3>
                             <button class="complete-btn" onclick="selectDocument('${doc.id}')">📖 Đọc chi tiết ${doc.badge} →</button>
                         </div>
                         ${renderMindmapCardHtml(doc.id)}
@@ -1493,7 +1530,7 @@
                 <div class="module-hero">
                     <div>
                         <span class="brand-badge">VISUAL ARCHITECTURE & DECISION TREES</span>
-                        <h2 style="font-size:1.5rem; font-weight:800; margin-top:6px;">🏗️ Hệ Thống Sơ Đồ Quyết Định Phòng Thi & Máy Tính Nhẩm VRAM LLM</h2>
+                        <h2 style="font-size: calc(var(--reading-font-size, 1rem) * 1.5); font-weight:800; margin-top:6px;">🏗️ Hệ Thống Sơ Đồ Quyết Định Phòng Thi & Máy Tính Nhẩm VRAM LLM</h2>
                         <p style="color:var(--text-secondary); margin-top:4px;">Các sơ đồ cây quyết định được thiết kế bằng giao diện Card trực quan giúp bạn định hướng đáp án đúng trong 10 giây.</p>
                     </div>
                 </div>
@@ -1501,7 +1538,7 @@
                 <!-- Interactive LLM VRAM Calculator -->
                 <div class="hub-card" style="margin-bottom:28px;">
                     <h3>🧮 Máy Tính Dung Lượng VRAM GPU Cho LLM — Trọng Số, Công Thức KV Cache & Ngân Sách AdamW (Module 1, 6, 7, 8)</h3>
-                    <p style="color:var(--text-secondary); font-size:0.9rem;">Thay đổi kích thước mô hình, chuẩn độ chính xác, cấu hình ngữ cảnh (<code>Batch Size × Seq Len</code>, <code>GQA vs. MHA</code>) và chế độ vận hành để thấy rõ sự khác biệt giữa Suy luận, PEFT (LoRA/QLoRA) và Full Fine-Tuning (<code>16N bytes/param</code> với AdamW):</p>
+                    <p style="color:var(--text-secondary); font-size: calc(var(--reading-font-size, 1rem) * 0.9);">Thay đổi kích thước mô hình, chuẩn độ chính xác, cấu hình ngữ cảnh (<code>Batch Size × Seq Len</code>, <code>GQA vs. MHA</code>) và chế độ vận hành để thấy rõ sự khác biệt giữa Suy luận, PEFT (LoRA/QLoRA) và Full Fine-Tuning (<code>16N bytes/param</code> với AdamW):</p>
                     <div class="calc-controls">
                         <div class="calc-group">
                             <label>1. Kích thước Mô hình (Số tham số)</label>
@@ -1609,11 +1646,11 @@
 
             document.getElementById('vramCalcResult').innerHTML = `
                 <div>
-                    <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Tổng VRAM Ước Tính Cần Thiết</div>
+                    <div style="font-size: calc(var(--reading-font-size, 1rem) * 0.8); color:var(--text-muted); text-transform:uppercase; font-weight:700;">Tổng VRAM Ước Tính Cần Thiết</div>
                     <div class="calc-big-num">~${totalGB.toFixed(1)} GB VRAM</div>
-                    <div style="font-size:0.86rem; color:var(--text-secondary); margin-top:4px;">${breakdown}</div>
+                    <div style="font-size: calc(var(--reading-font-size, 1rem) * 0.86); color:var(--text-secondary); margin-top:4px;">${breakdown}</div>
                 </div>
-                <div style="max-width:440px; background:var(--bg-card); padding:12px 16px; border-radius:8px; border:1px solid var(--border-color); border-left:3.5px solid var(--nv-green); font-size:0.87rem; color:var(--text-secondary);">
+                <div style="max-width:440px; background:var(--bg-card); padding:12px 16px; border-radius:8px; border:1px solid var(--border-color); border-left:3.5px solid var(--nv-green); font-size: calc(var(--reading-font-size, 1rem) * 0.87); color:var(--text-secondary);">
                     ${gpuRec}
                 </div>
             `;
@@ -1628,7 +1665,7 @@
                 <div class="module-hero">
                     <div>
                         <span class="brand-badge">ACTIVE RECALL FLASHCARDS</span>
-                        <h2 style="font-size:1.5rem; font-weight:800; margin-top:6px;">⚡ Bộ Thẻ Flashcards Lật Mở Ôn Tập Phản Xạ Nhanh (${FLASHCARDS_DATA.length} Thẻ Cốt Lõi)</h2>
+                        <h2 style="font-size: calc(var(--reading-font-size, 1rem) * 1.5); font-weight:800; margin-top:6px;">⚡ Bộ Thẻ Flashcards Lật Mở Ôn Tập Phản Xạ Nhanh (${FLASHCARDS_DATA.length} Thẻ Cốt Lõi)</h2>
                         <p style="color:var(--text-secondary); margin-top:4px;">Bấm vào từng thẻ để lật xem đáp án. Tự trả lời trong đầu trước khi lật thẻ để ghi nhớ lâu gấp 3 lần!</p>
                     </div>
                     <button class="complete-btn" onclick="document.querySelectorAll('.flashcard').forEach(c => { c.classList.remove('flipped'); c.querySelector('.fc-answer').style.display='none'; })">🔄 Úp lại toàn bộ thẻ</button>
@@ -1640,14 +1677,14 @@
                             <div>
                                 <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
                                     <span class="brand-badge">${fc.cat}</span>
-                                    <span style="font-size:0.75rem; color:var(--text-muted)">Thẻ #${idx + 1} • Bấm để lật</span>
+                                    <span style="font-size: calc(var(--reading-font-size, 1rem) * 0.75); color:var(--text-muted)">Thẻ #${idx + 1} • Bấm để lật</span>
                                 </div>
-                                <div style="font-weight:600; font-size:0.94rem; color:var(--text-primary); margin-bottom:12px;">❓ ${fc.q}</div>
-                                <div class="fc-answer" style="font-size:0.85rem; color:var(--text-secondary); white-space:pre-line; padding-top:10px; border-top:1px dashed var(--border-color); display:none;">
+                                <div style="font-weight:600; font-size: calc(var(--reading-font-size, 1rem) * 0.94); color:var(--text-primary); margin-bottom:12px;">❓ ${fc.q}</div>
+                                <div class="fc-answer" style="font-size: calc(var(--reading-font-size, 1rem) * 0.85); color:var(--text-secondary); white-space:pre-line; padding-top:10px; border-top:1px dashed var(--border-color); display:none;">
                                     ${fc.a}
                                 </div>
                             </div>
-                            <div style="font-size:0.74rem; color:var(--text-muted); margin-top:12px; font-weight:500;">👆 Click để Hiện / Ẩn Đáp án</div>
+                            <div style="font-size: calc(var(--reading-font-size, 1rem) * 0.74); color:var(--text-muted); margin-top:12px; font-weight:500;">👆 Click để Hiện / Ẩn Đáp án</div>
                         </div>
                     `).join('')}
                 </div>
@@ -1807,8 +1844,8 @@
                         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:14px;">
                             <div>
                                 <span class="brand-badge">${passed ? '✅ PASSED (ĐẠT CHUẨN >= 70%)' : '⚠️ NEEDS REVIEW (CẦN ÔN TẬP THÊM < 70%)'}</span>
-                                <h3 style="font-size:1.35rem; margin-top:6px;">📊 ${isEn ? 'Mock Exam Score Report' : 'Báo Cáo Kết Quả Bài Thi Thử 50 Câu'}</h3>
-                                <p style="color:var(--text-secondary); font-size:0.88rem;">
+                                <h3 style="font-size: calc(var(--reading-font-size, 1rem) * 1.35); margin-top:6px;">📊 ${isEn ? 'Mock Exam Score Report' : 'Báo Cáo Kết Quả Bài Thi Thử 50 Câu'}</h3>
+                                <p style="color:var(--text-secondary); font-size: calc(var(--reading-font-size, 1rem) * 0.88);">
                                     ${isEn
                                         ? `Answered: <strong>${answeredCount}/${total}</strong> • Time Elapsed: <strong>${formatTimer(timeUsedSec)}</strong> • ${quizState.mode === 'practice01' ? 'Multiple-answer questions require an exact match (no partial credit).' : 'Answer Key Distribution: <code>A:12 | B:12 | C:13 | D:13</code>'}`
                                         : `Đã trả lời: <strong>${answeredCount}/${total}</strong> câu • Thời gian làm bài: <strong>${formatTimer(timeUsedSec)}</strong> • Phân bố đáp án chuẩn: <code>A:12 | B:12 | C:13 | D:13</code>`}
@@ -1837,7 +1874,7 @@
             // Build Question Navigator Palette for 50-question modes
             const paletteHtml = `
                 <div class="q-palette">
-                    <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:0.8rem; color:var(--text-secondary); flex-wrap:wrap; gap:8px;">
+                    <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size: calc(var(--reading-font-size, 1rem) * 0.8); color:var(--text-secondary); flex-wrap:wrap; gap:8px;">
                         <span>🧭 <strong>${isEn ? 'Question Navigator (Click to jump):' : 'Bảng Điều Hướng Câu Hỏi (Bấm để nhảy tới câu):'}</strong></span>
                         <span>
                             ${strictMode && !quizState.submitted
@@ -1863,8 +1900,8 @@
                 <div class="module-hero">
                     <div>
                         <span class="brand-badge">${quizState.mode === 'practice01' ? 'INDEPENDENT PRACTICE MATERIAL • NOT OFFICIAL NVIDIA EXAM QUESTIONS' : 'INTERACTIVE MOCK EXAM • 5 OFFICIAL DOMAINS • BALANCED ANSWER KEY (A:12 / B:12 / C:13 / D:13)'}</span>
-                        <h2 style="font-size:1.38rem; font-weight:800; margin-top:6px;">🎯 ${modeTitle}</h2>
-                        <p style="color:var(--text-secondary); margin-top:4px; font-size:0.9rem;">
+                        <h2 style="font-size: calc(var(--reading-font-size, 1rem) * 1.38); font-weight:800; margin-top:6px;">🎯 ${modeTitle}</h2>
+                        <p style="color:var(--text-secondary); margin-top:4px; font-size: calc(var(--reading-font-size, 1rem) * 0.9);">
                             ${strictMode
                                 ? (isEn
                                     ? 'Exam Simulation Mode: Select your answers (you can change choices anytime and flag items for review). Correct answers and detailed explanations are revealed ONLY after you click <strong>Submit Exam</strong>.'
@@ -1917,12 +1954,12 @@
                                         <span class="domain-pill">${q.domain}</span>
                                     </div>
                                     ${strictMode && !quizState.submitted ? `
-                                        <button class="complete-btn" id="qflag-${qIdx}" style="padding:4px 10px; font-size:0.76rem; ${isFlagged ? 'border-color:var(--accent-amber); color:var(--accent-amber);' : ''}" onclick="toggleFlagQuestion(${qIdx})">
+                                        <button class="complete-btn" id="qflag-${qIdx}" style="padding:4px 10px; font-size: calc(var(--reading-font-size, 1rem) * 0.76); ${isFlagged ? 'border-color:var(--accent-amber); color:var(--accent-amber);' : ''}" onclick="toggleFlagQuestion(${qIdx})">
                                             ${isFlagged ? (isEn ? '🚩 Flagged for Review' : '🚩 Đã đánh dấu xem lại') : (isEn ? '🏳️ Flag for Review' : '🏳️ Đánh dấu xem lại')}
                                         </button>
                                     ` : ''}
                                 </div>
-                                <div style="font-size:0.98rem; font-weight:600; color:var(--text-primary); margin-bottom:14px;">${marked.parseInline(q.prompt)}</div>
+                                <div style="font-size: calc(var(--reading-font-size, 1rem) * 0.98); font-weight:600; color:var(--text-primary); margin-bottom:14px;">${marked.parseInline(q.prompt)}</div>
                                 <div>
                                     ${q.options.map(opt => {
                                         let cls = '';
@@ -1954,7 +1991,7 @@
 
                 ${strictMode && !quizState.submitted ? `
                     <div style="display:flex; justify-content:center; margin-top:24px; margin-bottom:32px;">
-                        <button class="complete-btn completed" style="padding:12px 28px; font-size:1rem;" onclick="submitStrictExam()">
+                        <button class="complete-btn completed" style="padding:12px 28px; font-size: calc(var(--reading-font-size, 1rem) * 1);" onclick="submitStrictExam()">
                             📤 ${isEn ? 'Submit All 50 Answers & View Score Breakdown' : 'Nộp Bài Thi 50 Câu & Xem Điểm Theo 5 Miền Kiến Thức'}
                         </button>
                     </div>
@@ -2085,6 +2122,8 @@
         }
 
         function openSearchModal() {
+            closeMobileDrawers();
+            document.getElementById('readingSettings').open = false;
             document.getElementById('searchModal').classList.add('open');
             const input = document.getElementById('searchInput');
             input.focus();
@@ -2104,13 +2143,14 @@
         document.getElementById('toggleSidebarBtn').addEventListener('click', () => {
             const sidebarLeft = document.getElementById('sidebarLeft');
             const sidebarRight = document.getElementById('sidebarRight');
-            const backdrop = document.getElementById('sidebarBackdrop');
             sidebarRight.classList.remove('mobile-open');
             const isNowCollapsed = sidebarLeft.classList.toggle('collapsed');
-            if (window.innerWidth <= 860) {
-                backdrop.classList.toggle('active', !isNowCollapsed);
-            }
+            if (!leftDrawerQuery.matches) desktopSidebarCollapsed = isNowCollapsed;
+            document.getElementById('readingSettings').open = false;
+            syncDrawerState();
         });
+
+        document.getElementById('closeSidebarBtn').addEventListener('click', closeMobileDrawers);
 
         document.getElementById('sidebarBackdrop').addEventListener('click', () => {
             closeMobileDrawers();
@@ -2119,36 +2159,48 @@
         document.getElementById('openTocFab').addEventListener('click', () => {
             const sidebarRight = document.getElementById('sidebarRight');
             const sidebarLeft = document.getElementById('sidebarLeft');
-            const backdrop = document.getElementById('sidebarBackdrop');
-            if (window.innerWidth <= 860) sidebarLeft.classList.add('collapsed');
-            const isOpen = sidebarRight.classList.toggle('mobile-open');
-            backdrop.classList.toggle('active', isOpen);
+            if (leftDrawerQuery.matches) sidebarLeft.classList.add('collapsed');
+            if (tocDrawerQuery.matches) sidebarRight.classList.toggle('mobile-open');
+            else desktopTocCollapsed = false;
+            document.getElementById('readingSettings').open = false;
+            syncDrawerState();
+            if (!tocDrawerQuery.matches) document.getElementById('closeTocMobileBtn').focus();
         });
 
         document.getElementById('closeTocMobileBtn').addEventListener('click', () => {
-            document.getElementById('sidebarRight').classList.remove('mobile-open');
-            document.getElementById('sidebarBackdrop').classList.remove('active');
+            if (!tocDrawerQuery.matches) desktopTocCollapsed = true;
+            closeMobileDrawers();
+            if (!tocDrawerQuery.matches) document.getElementById('openTocFab').focus();
         });
 
-        window.addEventListener('resize', () => {
+        leftDrawerQuery.addEventListener('change', () => {
+            document.getElementById('sidebarLeft').classList.toggle('collapsed', leftDrawerQuery.matches || desktopSidebarCollapsed);
+            closeMobileDrawers();
+        });
+        tocDrawerQuery.addEventListener('change', () => {
+            closeMobileDrawers();
             syncMobileFabState();
-            if (window.innerWidth > 860) {
-                document.getElementById('sidebarBackdrop').classList.remove('active');
-            }
         });
 
-        document.getElementById('fontIncBtn').addEventListener('click', () => {
-            fontSize = Math.min(22, fontSize + 1);
-            document.body.style.setProperty('--base-font-size', `${fontSize}px`);
+        document.addEventListener('click', (e) => {
+            const settings = document.getElementById('readingSettings');
+            if (!settings.contains(e.target)) settings.open = false;
         });
 
-        document.getElementById('fontDecBtn').addEventListener('click', () => {
-            fontSize = Math.max(13, fontSize - 1);
-            document.body.style.setProperty('--base-font-size', `${fontSize}px`);
-        });
+        function setReadingFontSize(nextSize) {
+            fontSize = Math.max(13, Math.min(22, nextSize));
+            document.getElementById('contentContainer').style.setProperty('--reading-font-size', `${fontSize}px`);
+            document.getElementById('fontSizeValue').textContent = String(fontSize);
+            document.getElementById('fontIncBtn').disabled = fontSize === 22;
+            document.getElementById('fontDecBtn').disabled = fontSize === 13;
+        }
+
+        document.getElementById('fontIncBtn').addEventListener('click', () => setReadingFontSize(fontSize + 1));
+        document.getElementById('fontDecBtn').addEventListener('click', () => setReadingFontSize(fontSize - 1));
 
         document.getElementById('widthToggleBtn').addEventListener('click', () => {
-            document.getElementById('contentContainer').classList.toggle('wide');
+            const wide = document.getElementById('contentContainer').classList.toggle('wide');
+            document.getElementById('widthToggleBtn').setAttribute('aria-pressed', String(wide));
         });
 
         document.getElementById('themeToggleBtn').addEventListener('click', () => {
@@ -2172,11 +2224,32 @@
             } else if (e.key === 'Escape') {
                 closeSearchModal();
                 closeMobileDrawers();
+                const settings = document.getElementById('readingSettings');
+                if (settings.open) {
+                    settings.open = false;
+                    settings.querySelector('summary').focus();
+                }
+            } else if (e.key === 'Tab' && !document.getElementById('searchModal').classList.contains('open')) {
+                const drawer = leftDrawerQuery.matches && !document.getElementById('sidebarLeft').classList.contains('collapsed')
+                    ? document.getElementById('sidebarLeft')
+                    : tocDrawerQuery.matches && document.getElementById('sidebarRight').classList.contains('mobile-open')
+                        ? document.getElementById('sidebarRight') : null;
+                if (drawer) {
+                    const controls = [...drawer.querySelectorAll('button, a[href]')].filter(el => el.getClientRects().length);
+                    const first = controls[0];
+                    const last = controls[controls.length - 1];
+                    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+                    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+                }
             }
         });
 
         window.addEventListener('DOMContentLoaded', () => {
-            if (window.innerWidth <= 860) {
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.title = tab.querySelector('.tab-label').textContent;
+                tab.setAttribute('aria-label', tab.title);
+            });
+            if (leftDrawerQuery.matches) {
                 document.getElementById('sidebarLeft').classList.add('collapsed');
             }
             syncMobileFabState();
