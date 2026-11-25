@@ -1,0 +1,1726 @@
+[
+  {
+    "id": "GENL-P01-001",
+    "domain": "Core Machine Learning and AI Knowledge",
+    "topic": "Supervised learning",
+    "question": "A team trains a model using customer messages paired with manually assigned intent labels. Which learning paradigm is being used?",
+    "difficulty": "fundamental",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Reinforcement learning",
+        "explanation": "Learning is driven by rewards from interactions."
+      },
+      {
+        "id": "B",
+        "text": "Unsupervised learning",
+        "explanation": "No target labels are required."
+      },
+      {
+        "id": "C",
+        "text": "Self-supervised learning",
+        "explanation": "Targets are derived from the data itself."
+      },
+      {
+        "id": "D",
+        "text": "Supervised learning",
+        "explanation": "The target labels guide training."
+      }
+    ],
+    "correctAnswers": [
+      "D"
+    ],
+    "explanation": "The target labels guide training."
+  },
+  {
+    "id": "GENL-P01-002",
+    "domain": "Core Machine Learning and AI Knowledge",
+    "topic": "Clustering",
+    "question": "A retailer wants to discover customer groups without predefined segment labels. Which technique is most appropriate?",
+    "difficulty": "fundamental",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Supervised classification",
+        "explanation": "It requires predefined classes."
+      },
+      {
+        "id": "B",
+        "text": "Linear regression",
+        "explanation": "It predicts continuous targets."
+      },
+      {
+        "id": "C",
+        "text": "K-means clustering",
+        "explanation": "It groups observations by similarity without labels."
+      },
+      {
+        "id": "D",
+        "text": "Logistic regression",
+        "explanation": "It learns from labeled targets."
+      }
+    ],
+    "correctAnswers": [
+      "C"
+    ],
+    "explanation": "It groups observations by similarity without labels."
+  },
+  {
+    "id": "GENL-P01-003",
+    "domain": "Core Machine Learning and AI Knowledge",
+    "topic": "Self-supervised learning",
+    "question": "An LLM learns to predict the next token from raw text without manually annotated labels. What best describes this training objective?",
+    "difficulty": "fundamental",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Reinforcement learning",
+        "explanation": "No reward-driven interaction is specified."
+      },
+      {
+        "id": "B",
+        "text": "Human-supervised classification",
+        "explanation": "Manually assigned class labels are not needed."
+      },
+      {
+        "id": "C",
+        "text": "Clustering",
+        "explanation": "It does not predict next tokens."
+      },
+      {
+        "id": "D",
+        "text": "Self-supervised learning",
+        "explanation": "The text itself supplies prediction targets."
+      }
+    ],
+    "correctAnswers": [
+      "D"
+    ],
+    "explanation": "The text itself supplies prediction targets."
+  },
+  {
+    "id": "GENL-P01-004",
+    "domain": "Core Machine Learning and AI Knowledge",
+    "topic": "Transformer",
+    "question": "Which Transformer component prevents a decoder-only language model from attending to future tokens during training?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Token embedding",
+        "explanation": "It represents token identities."
+      },
+      {
+        "id": "B",
+        "text": "Layer normalization",
+        "explanation": "It normalizes activations."
+      },
+      {
+        "id": "C",
+        "text": "Causal attention mask",
+        "explanation": "It blocks attention to subsequent positions."
+      },
+      {
+        "id": "D",
+        "text": "Output projection",
+        "explanation": "It maps hidden states to vocabulary logits."
+      }
+    ],
+    "correctAnswers": [
+      "C"
+    ],
+    "explanation": "It blocks attention to subsequent positions."
+  },
+  {
+    "id": "GENL-P01-005",
+    "domain": "Core Machine Learning and AI Knowledge",
+    "topic": "Embeddings",
+    "question": "What makes dense text embeddings useful for semantic search?",
+    "difficulty": "fundamental",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "They preserve every word in its original order exactly",
+        "explanation": "Dense embeddings do not guarantee lossless reconstruction."
+      },
+      {
+        "id": "B",
+        "text": "They eliminate the need for a similarity metric",
+        "explanation": "Retrieval still requires a ranking or similarity method."
+      },
+      {
+        "id": "C",
+        "text": "They always assign identical vectors to paraphrases",
+        "explanation": "Similarity does not require identical vectors."
+      },
+      {
+        "id": "D",
+        "text": "Semantically related texts can have nearby vector representations",
+        "explanation": "Embedding models can encode meaning beyond exact word matches."
+      }
+    ],
+    "correctAnswers": [
+      "D"
+    ],
+    "explanation": "Embedding models can encode meaning beyond exact word matches."
+  },
+  {
+    "id": "GENL-P01-006",
+    "domain": "Core Machine Learning and AI Knowledge",
+    "topic": "RAG",
+    "question": "A chatbot must answer questions about policies that change weekly without retraining its language model. Which approach is most suitable?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Increase the number of pretraining epochs",
+        "explanation": "This does not automatically supply current policies."
+      },
+      {
+        "id": "B",
+        "text": "Use a larger tokenizer vocabulary",
+        "explanation": "Vocabulary size does not provide current facts."
+      },
+      {
+        "id": "C",
+        "text": "Increase temperature",
+        "explanation": "Sampling diversity does not update knowledge."
+      },
+      {
+        "id": "D",
+        "text": "Retrieve current policy passages and include them in the prompt",
+        "explanation": "RAG supplies updated external evidence at inference time."
+      }
+    ],
+    "correctAnswers": [
+      "D"
+    ],
+    "explanation": "RAG supplies updated external evidence at inference time."
+  },
+  {
+    "id": "GENL-P01-007",
+    "domain": "Core Machine Learning and AI Knowledge",
+    "topic": "Few-shot prompting",
+    "question": "An engineer adds three labeled examples to a prompt before asking the model to classify a new message. Which method is used?",
+    "difficulty": "fundamental",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Full fine-tuning",
+        "explanation": "No parameters are updated."
+      },
+      {
+        "id": "B",
+        "text": "Zero-shot prompting",
+        "explanation": "Zero-shot uses no demonstrations."
+      },
+      {
+        "id": "C",
+        "text": "Few-shot prompting",
+        "explanation": "Multiple demonstrations are supplied in context."
+      },
+      {
+        "id": "D",
+        "text": "Knowledge distillation",
+        "explanation": "No student is trained from a teacher."
+      }
+    ],
+    "correctAnswers": [
+      "C"
+    ],
+    "explanation": "Multiple demonstrations are supplied in context."
+  },
+  {
+    "id": "GENL-P01-008",
+    "domain": "Core Machine Learning and AI Knowledge",
+    "topic": "LoRA",
+    "question": "A team needs to adapt a pretrained LLM using less trainable parameter memory than full fine-tuning. Which method is most appropriate?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Full fine-tuning",
+        "explanation": "It updates the base model parameters."
+      },
+      {
+        "id": "B",
+        "text": "Document chunking",
+        "explanation": "It prepares retrieval content rather than adapting weights."
+      },
+      {
+        "id": "C",
+        "text": "LoRA",
+        "explanation": "Low-rank trainable updates adapt a largely frozen base model."
+      },
+      {
+        "id": "D",
+        "text": "Greedy decoding",
+        "explanation": "It selects output tokens without training."
+      }
+    ],
+    "correctAnswers": [
+      "C"
+    ],
+    "explanation": "Low-rank trainable updates adapt a largely frozen base model."
+  },
+  {
+    "id": "GENL-P01-009",
+    "domain": "Core Machine Learning and AI Knowledge",
+    "topic": "Cross-validation",
+    "question": "Why is k-fold cross-validation useful when comparing models on a limited labeled dataset?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "It evaluates models across multiple train-validation partitions",
+        "explanation": "This reduces dependence on a single split."
+      },
+      {
+        "id": "B",
+        "text": "It removes the need for training",
+        "explanation": "Each fold requires fitting a model."
+      },
+      {
+        "id": "C",
+        "text": "It guarantees zero overfitting",
+        "explanation": "No validation method guarantees this."
+      },
+      {
+        "id": "D",
+        "text": "It makes the final test set part of every training fold",
+        "explanation": "A held-out test set should remain separate."
+      }
+    ],
+    "correctAnswers": [
+      "A"
+    ],
+    "explanation": "This reduces dependence on a single split."
+  },
+  {
+    "id": "GENL-P01-010",
+    "domain": "Core Machine Learning and AI Knowledge",
+    "topic": "Architecture",
+    "question": "Which architecture is most directly designed for autoregressive next-token generation?",
+    "difficulty": "fundamental",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "K-means model",
+        "explanation": "It clusters vectors."
+      },
+      {
+        "id": "B",
+        "text": "Principal component analysis",
+        "explanation": "It reduces dimensions."
+      },
+      {
+        "id": "C",
+        "text": "Decoder-only Transformer with causal self-attention",
+        "explanation": "It predicts subsequent tokens using preceding context."
+      },
+      {
+        "id": "D",
+        "text": "Encoder-only Transformer with bidirectional attention",
+        "explanation": "It is commonly used for representation tasks."
+      }
+    ],
+    "correctAnswers": [
+      "C"
+    ],
+    "explanation": "It predicts subsequent tokens using preceding context."
+  },
+  {
+    "id": "GENL-P01-011",
+    "domain": "Core Machine Learning and AI Knowledge",
+    "topic": "Tokenization",
+    "question": "What is the distinction between token IDs and token embeddings?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Embeddings are the original text strings",
+        "explanation": "They are numerical vectors."
+      },
+      {
+        "id": "B",
+        "text": "IDs and embeddings are always identical",
+        "explanation": "They have different representations."
+      },
+      {
+        "id": "C",
+        "text": "Token IDs are probability distributions",
+        "explanation": "IDs are discrete identifiers."
+      },
+      {
+        "id": "D",
+        "text": "IDs identify vocabulary entries; embeddings are dense vectors",
+        "explanation": "An embedding lookup maps discrete IDs to continuous representations."
+      }
+    ],
+    "correctAnswers": [
+      "D"
+    ],
+    "explanation": "An embedding lookup maps discrete IDs to continuous representations."
+  },
+  {
+    "id": "GENL-P01-012",
+    "domain": "Core Machine Learning and AI Knowledge",
+    "topic": "Prompt design",
+    "question": "A model must generate a response using four specified JSON fields. Which prompt change is most useful?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Increase the training batch size",
+        "explanation": "This is unrelated to inference-time prompting."
+      },
+      {
+        "id": "B",
+        "text": "Remove field names from instructions",
+        "explanation": "This removes needed constraints."
+      },
+      {
+        "id": "C",
+        "text": "Increase temperature to maximum",
+        "explanation": "This may increase variability."
+      },
+      {
+        "id": "D",
+        "text": "Specify the schema and show a valid output example",
+        "explanation": "Clear constraints and demonstrations guide formatting."
+      }
+    ],
+    "correctAnswers": [
+      "D"
+    ],
+    "explanation": "Clear constraints and demonstrations guide formatting."
+  },
+  {
+    "id": "GENL-P01-013",
+    "domain": "Core Machine Learning and AI Knowledge",
+    "topic": "Sampling",
+    "question": "What is the main effect of lowering sampling temperature while keeping other decoding settings fixed?",
+    "difficulty": "fundamental",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "It guarantees factual accuracy",
+        "explanation": "Sampling cannot guarantee truth."
+      },
+      {
+        "id": "B",
+        "text": "It increases the context window",
+        "explanation": "Context capacity is separate."
+      },
+      {
+        "id": "C",
+        "text": "It generally concentrates probability on higher-scoring tokens",
+        "explanation": "Lower temperature sharpens the distribution."
+      },
+      {
+        "id": "D",
+        "text": "It permanently updates model weights",
+        "explanation": "Decoding does not train weights."
+      }
+    ],
+    "correctAnswers": [
+      "C"
+    ],
+    "explanation": "Lower temperature sharpens the distribution."
+  },
+  {
+    "id": "GENL-P01-014",
+    "domain": "Core Machine Learning and AI Knowledge",
+    "topic": "Loss",
+    "question": "Which objective is commonly used to train an autoregressive language model?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "BLEU as the standard differentiable token loss",
+        "explanation": "BLEU is primarily an evaluation metric."
+      },
+      {
+        "id": "B",
+        "text": "Mean absolute error on token IDs",
+        "explanation": "Token IDs are categorical, not ordinal targets."
+      },
+      {
+        "id": "C",
+        "text": "Silhouette score",
+        "explanation": "This evaluates clustering."
+      },
+      {
+        "id": "D",
+        "text": "Next-token cross-entropy loss",
+        "explanation": "It penalizes low probability assigned to the observed next token."
+      }
+    ],
+    "correctAnswers": [
+      "D"
+    ],
+    "explanation": "It penalizes low probability assigned to the observed next token."
+  },
+  {
+    "id": "GENL-P01-015",
+    "domain": "Core Machine Learning and AI Knowledge",
+    "topic": "Retrieval",
+    "question": "A RAG system retrieves the correct source passage, but the answer ignores it. Which component should be investigated first?",
+    "difficulty": "advanced",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Generation prompt and grounding behavior",
+        "explanation": "Retrieval succeeded; the generator may not use its evidence."
+      },
+      {
+        "id": "B",
+        "text": "Replace the embedding model immediately",
+        "explanation": "The correct passage was already found."
+      },
+      {
+        "id": "C",
+        "text": "Increase embedding dimensionality only",
+        "explanation": "It does not directly address evidence use."
+      },
+      {
+        "id": "D",
+        "text": "Delete the vector index",
+        "explanation": "This would remove retrieval capability."
+      }
+    ],
+    "correctAnswers": [
+      "A"
+    ],
+    "explanation": "Retrieval succeeded; the generator may not use its evidence."
+  },
+  {
+    "id": "GENL-P01-016",
+    "domain": "Software Development",
+    "topic": "NVIDIA cuDF",
+    "question": "Which library provides a GPU-accelerated DataFrame interface for tabular preprocessing?",
+    "difficulty": "fundamental",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "spaCy",
+        "explanation": "It provides NLP processing tools."
+      },
+      {
+        "id": "B",
+        "text": "cuDF",
+        "explanation": "It provides GPU-based DataFrame operations."
+      },
+      {
+        "id": "C",
+        "text": "TensorRT",
+        "explanation": "It optimizes neural network inference."
+      },
+      {
+        "id": "D",
+        "text": "cuML",
+        "explanation": "It focuses on machine learning algorithms."
+      }
+    ],
+    "correctAnswers": [
+      "B"
+    ],
+    "explanation": "It provides GPU-based DataFrame operations."
+  },
+  {
+    "id": "GENL-P01-017",
+    "domain": "Software Development",
+    "topic": "NVIDIA cuML",
+    "question": "A developer wants to accelerate a compatible scikit-learn-style clustering workload on an NVIDIA GPU. Which library is most relevant?",
+    "difficulty": "fundamental",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "cuDF",
+        "explanation": "It primarily manipulates tabular data."
+      },
+      {
+        "id": "B",
+        "text": "Triton Inference Server",
+        "explanation": "It serves models."
+      },
+      {
+        "id": "C",
+        "text": "ONNX",
+        "explanation": "It represents models for exchange."
+      },
+      {
+        "id": "D",
+        "text": "cuML",
+        "explanation": "It provides GPU-accelerated ML algorithms."
+      }
+    ],
+    "correctAnswers": [
+      "D"
+    ],
+    "explanation": "It provides GPU-accelerated ML algorithms."
+  },
+  {
+    "id": "GENL-P01-018",
+    "domain": "Software Development",
+    "topic": "ONNX",
+    "question": "What is the primary benefit of exporting a supported model to ONNX? Select TWO answers.",
+    "difficulty": "fundamental",
+    "type": "multiple",
+    "options": [
+      {
+        "id": "A",
+        "text": "Guaranteed identical speed on all devices",
+        "explanation": "Runtime and hardware affect speed."
+      },
+      {
+        "id": "B",
+        "text": "It enables supported models to be consumed by compatible inference engines",
+        "explanation": "Compatible engines can import the standardized graph."
+      },
+      {
+        "id": "C",
+        "text": "Guaranteed elimination of all numerical errors",
+        "explanation": "Conversion needs validation."
+      },
+      {
+        "id": "D",
+        "text": "A portable model representation for compatible runtimes",
+        "explanation": "ONNX supports interoperability across tools."
+      },
+      {
+        "id": "E",
+        "text": "Automatic collection of training labels",
+        "explanation": "ONNX is a model format."
+      }
+    ],
+    "correctAnswers": [
+      "B",
+      "D"
+    ],
+    "explanation": "Compatible engines can import the standardized graph. ONNX supports interoperability across tools."
+  },
+  {
+    "id": "GENL-P01-019",
+    "domain": "Software Development",
+    "topic": "TensorRT",
+    "question": "Which technique can TensorRT use to reduce inference overhead on supported NVIDIA GPUs?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Operator fusion",
+        "explanation": "Combining compatible operations can reduce intermediate overhead."
+      },
+      {
+        "id": "B",
+        "text": "Human preference annotation",
+        "explanation": "This is data collection."
+      },
+      {
+        "id": "C",
+        "text": "Randomly discarding training examples",
+        "explanation": "This is not engine optimization."
+      },
+      {
+        "id": "D",
+        "text": "Increasing dropout during inference",
+        "explanation": "Dropout is normally disabled for inference."
+      }
+    ],
+    "correctAnswers": [
+      "A"
+    ],
+    "explanation": "Combining compatible operations can reduce intermediate overhead."
+  },
+  {
+    "id": "GENL-P01-020",
+    "domain": "Software Development",
+    "topic": "Triton",
+    "question": "A team needs to expose trained models through a centralized inference service supporting multiple model backends. Which NVIDIA tool fits?",
+    "difficulty": "fundamental",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "NumPy",
+        "explanation": "It provides numerical array operations."
+      },
+      {
+        "id": "B",
+        "text": "cuDF",
+        "explanation": "It processes DataFrames."
+      },
+      {
+        "id": "C",
+        "text": "Triton Inference Server",
+        "explanation": "It provides model serving across supported backends."
+      },
+      {
+        "id": "D",
+        "text": "cuML",
+        "explanation": "It implements ML algorithms."
+      }
+    ],
+    "correctAnswers": [
+      "C"
+    ],
+    "explanation": "It provides model serving across supported backends."
+  },
+  {
+    "id": "GENL-P01-021",
+    "domain": "Software Development",
+    "topic": "NIM",
+    "question": "A developer wants a packaged NVIDIA inference microservice for a supported LLM rather than building the serving stack from scratch. Which offering is most relevant?",
+    "difficulty": "fundamental",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "spaCy",
+        "explanation": "It is an NLP library."
+      },
+      {
+        "id": "B",
+        "text": "cuGraph",
+        "explanation": "It provides graph analytics."
+      },
+      {
+        "id": "C",
+        "text": "NVIDIA NIM",
+        "explanation": "It packages supported models for inference deployment."
+      },
+      {
+        "id": "D",
+        "text": "cuDF",
+        "explanation": "It processes tabular data."
+      }
+    ],
+    "correctAnswers": [
+      "C"
+    ],
+    "explanation": "It packages supported models for inference deployment."
+  },
+  {
+    "id": "GENL-P01-022",
+    "domain": "Software Development",
+    "topic": "spaCy",
+    "question": "Which Python library is particularly suited to tokenization, linguistic annotation and named-entity recognition in NLP pipelines?",
+    "difficulty": "fundamental",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Matplotlib",
+        "explanation": "It visualizes data."
+      },
+      {
+        "id": "B",
+        "text": "cuDF",
+        "explanation": "It handles tabular data."
+      },
+      {
+        "id": "C",
+        "text": "NumPy",
+        "explanation": "It handles numerical arrays."
+      },
+      {
+        "id": "D",
+        "text": "spaCy",
+        "explanation": "It provides these NLP pipeline components."
+      }
+    ],
+    "correctAnswers": [
+      "D"
+    ],
+    "explanation": "It provides these NLP pipeline components."
+  },
+  {
+    "id": "GENL-P01-023",
+    "domain": "Software Development",
+    "topic": "Vector databases",
+    "question": "What should a vector database store to support semantic document retrieval with source attribution?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Only raw GPU utilization measurements",
+        "explanation": "These are operational metrics."
+      },
+      {
+        "id": "B",
+        "text": "Only the generator vocabulary",
+        "explanation": "Vocabulary is not the document index."
+      },
+      {
+        "id": "C",
+        "text": "Embeddings linked to document text or source metadata",
+        "explanation": "Vector search locates relevant records and metadata identifies sources."
+      },
+      {
+        "id": "D",
+        "text": "Only model training loss values",
+        "explanation": "Loss does not identify document content."
+      }
+    ],
+    "correctAnswers": [
+      "C"
+    ],
+    "explanation": "Vector search locates relevant records and metadata identifies sources."
+  },
+  {
+    "id": "GENL-P01-024",
+    "domain": "Software Development",
+    "topic": "RAG ingestion",
+    "question": "An embedding model is replaced by a new model with a different vector space. What should be done before using it for retrieval? Select TWO answers.",
+    "difficulty": "advanced",
+    "type": "multiple",
+    "options": [
+      {
+        "id": "A",
+        "text": "Pad existing vectors with zeros regardless of model",
+        "explanation": "Matching shape does not align semantic spaces."
+      },
+      {
+        "id": "B",
+        "text": "Re-embed indexed documents and queries with compatible models",
+        "explanation": "Similarity requires compatible vector spaces."
+      },
+      {
+        "id": "C",
+        "text": "Validate retrieval quality after rebuilding the index",
+        "explanation": "Migration should be checked on representative queries."
+      },
+      {
+        "id": "D",
+        "text": "Change only the generator temperature",
+        "explanation": "This does not fix vector compatibility."
+      },
+      {
+        "id": "E",
+        "text": "Keep the old document vectors without validation",
+        "explanation": "The spaces may be incompatible."
+      }
+    ],
+    "correctAnswers": [
+      "B",
+      "C"
+    ],
+    "explanation": "Similarity requires compatible vector spaces. Migration should be checked on representative queries."
+  },
+  {
+    "id": "GENL-P01-025",
+    "domain": "Software Development",
+    "topic": "Monitoring",
+    "question": "Which metrics best reveal whether an LLM service is meeting interactive performance requirements?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Training dataset size only",
+        "explanation": "It does not measure live service behavior."
+      },
+      {
+        "id": "B",
+        "text": "Number of source code files",
+        "explanation": "It does not measure user experience."
+      },
+      {
+        "id": "C",
+        "text": "Time to first token, request latency and error rate",
+        "explanation": "These capture responsiveness and reliability."
+      },
+      {
+        "id": "D",
+        "text": "Vocabulary size only",
+        "explanation": "It does not measure response performance."
+      }
+    ],
+    "correctAnswers": [
+      "C"
+    ],
+    "explanation": "These capture responsiveness and reliability."
+  },
+  {
+    "id": "GENL-P01-026",
+    "domain": "Software Development",
+    "topic": "Batching",
+    "question": "What is a common trade-off when increasing inference batch size?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "GPU memory use always decreases",
+        "explanation": "Larger batches can require more memory."
+      },
+      {
+        "id": "B",
+        "text": "Model accuracy necessarily doubles",
+        "explanation": "Batch size does not guarantee accuracy changes."
+      },
+      {
+        "id": "C",
+        "text": "Throughput and latency always improve together",
+        "explanation": "The metrics can trade off."
+      },
+      {
+        "id": "D",
+        "text": "Higher throughput may come with increased waiting time or memory usage",
+        "explanation": "Batching can improve utilization but has latency and memory costs."
+      }
+    ],
+    "correctAnswers": [
+      "D"
+    ],
+    "explanation": "Batching can improve utilization but has latency and memory costs."
+  },
+  {
+    "id": "GENL-P01-027",
+    "domain": "Software Development",
+    "topic": "API reliability",
+    "question": "An LLM API occasionally returns transient server errors. Which client strategy is most appropriate?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Retry indefinitely without delay",
+        "explanation": "This can overload the service."
+      },
+      {
+        "id": "B",
+        "text": "Retrain the model for every error",
+        "explanation": "Transport failures do not imply training defects."
+      },
+      {
+        "id": "C",
+        "text": "Bounded retries with backoff and timeout handling",
+        "explanation": "This handles transient failures while limiting retry storms."
+      },
+      {
+        "id": "D",
+        "text": "Ignore errors and report success",
+        "explanation": "This hides failures."
+      }
+    ],
+    "correctAnswers": [
+      "C"
+    ],
+    "explanation": "This handles transient failures while limiting retry storms."
+  },
+  {
+    "id": "GENL-P01-028",
+    "domain": "Experimentation",
+    "topic": "Dataset splits",
+    "question": "Which dataset should remain untouched during hyperparameter selection to provide a final unbiased evaluation?",
+    "difficulty": "fundamental",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Combined training and validation set during selection",
+        "explanation": "It is not independent of development."
+      },
+      {
+        "id": "B",
+        "text": "Training set",
+        "explanation": "It fits model parameters."
+      },
+      {
+        "id": "C",
+        "text": "Held-out test set",
+        "explanation": "It is reserved for final evaluation."
+      },
+      {
+        "id": "D",
+        "text": "Validation set",
+        "explanation": "It guides model selection."
+      }
+    ],
+    "correctAnswers": [
+      "C"
+    ],
+    "explanation": "It is reserved for final evaluation."
+  },
+  {
+    "id": "GENL-P01-029",
+    "domain": "Experimentation",
+    "topic": "Overfitting",
+    "question": "Training loss continues to decrease while validation loss rises. What is the most likely diagnosis?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Overfitting",
+        "explanation": "The model fits training data increasingly well but generalizes worse."
+      },
+      {
+        "id": "B",
+        "text": "Underfitting both datasets",
+        "explanation": "Training loss is improving while validation worsens."
+      },
+      {
+        "id": "C",
+        "text": "Guaranteed data leakage",
+        "explanation": "The pattern alone does not establish leakage."
+      },
+      {
+        "id": "D",
+        "text": "Successful convergence on unseen data",
+        "explanation": "Rising validation loss suggests otherwise."
+      }
+    ],
+    "correctAnswers": [
+      "A"
+    ],
+    "explanation": "The model fits training data increasingly well but generalizes worse."
+  },
+  {
+    "id": "GENL-P01-030",
+    "domain": "Experimentation",
+    "topic": "Early stopping",
+    "question": "Which procedure can help mitigate overfitting during fine-tuning?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Use test data for every checkpoint decision",
+        "explanation": "This compromises independent evaluation."
+      },
+      {
+        "id": "B",
+        "text": "Stop based on a monitored validation metric",
+        "explanation": "Early stopping limits training beyond the best validation point."
+      },
+      {
+        "id": "C",
+        "text": "Remove validation monitoring",
+        "explanation": "This removes evidence of generalization."
+      },
+      {
+        "id": "D",
+        "text": "Select the checkpoint with lowest training loss only",
+        "explanation": "This may favor overfitting."
+      }
+    ],
+    "correctAnswers": [
+      "B"
+    ],
+    "explanation": "Early stopping limits training beyond the best validation point."
+  },
+  {
+    "id": "GENL-P01-031",
+    "domain": "Experimentation",
+    "topic": "Epoch calculation",
+    "question": "A dataset contains 2,400 examples. Training uses batches of 200 for three epochs, with one optimizer update per batch. How many updates occur?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "36",
+        "explanation": "Each epoch has 12 batches; three epochs yield 36 updates."
+      },
+      {
+        "id": "B",
+        "text": "7200",
+        "explanation": "This counts processed examples, not updates."
+      },
+      {
+        "id": "C",
+        "text": "600",
+        "explanation": "This multiplies batch size by epochs."
+      },
+      {
+        "id": "D",
+        "text": "12",
+        "explanation": "This is the count for one epoch."
+      }
+    ],
+    "correctAnswers": [
+      "A"
+    ],
+    "explanation": "Each epoch has 12 batches; three epochs yield 36 updates."
+  },
+  {
+    "id": "GENL-P01-032",
+    "domain": "Experimentation",
+    "topic": "Ablation",
+    "question": "A researcher wants to measure the contribution of a reranker in a RAG pipeline. Which experiment is best?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Compare with and without the reranker while holding other settings fixed",
+        "explanation": "An ablation isolates the component contribution."
+      },
+      {
+        "id": "B",
+        "text": "Change the embedding model and reranker together",
+        "explanation": "This confounds effects."
+      },
+      {
+        "id": "C",
+        "text": "Use different test questions for each variant",
+        "explanation": "Different inputs reduce comparability."
+      },
+      {
+        "id": "D",
+        "text": "Measure training loss of the generator only",
+        "explanation": "That does not isolate retrieval reranking."
+      }
+    ],
+    "correctAnswers": [
+      "A"
+    ],
+    "explanation": "An ablation isolates the component contribution."
+  },
+  {
+    "id": "GENL-P01-033",
+    "domain": "Experimentation",
+    "topic": "A/B testing",
+    "question": "Two chatbot versions are evaluated on live traffic. Which design reduces time-related confounding?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Run one version this month and the other next month",
+        "explanation": "Temporal changes can bias comparison."
+      },
+      {
+        "id": "B",
+        "text": "Compare only the best responses from each variant",
+        "explanation": "Selective sampling biases results."
+      },
+      {
+        "id": "C",
+        "text": "Randomly assign eligible users to concurrent variants",
+        "explanation": "Concurrent random assignment supports fair comparison."
+      },
+      {
+        "id": "D",
+        "text": "Give the new version only to expert users",
+        "explanation": "User differences confound results."
+      }
+    ],
+    "correctAnswers": [
+      "C"
+    ],
+    "explanation": "Concurrent random assignment supports fair comparison."
+  },
+  {
+    "id": "GENL-P01-034",
+    "domain": "Experimentation",
+    "topic": "Perplexity",
+    "question": "For the same evaluation text and tokenizer, what does lower language-model perplexity generally indicate?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Guaranteed factual correctness",
+        "explanation": "Likelihood is not factual verification."
+      },
+      {
+        "id": "B",
+        "text": "Lower GPU memory usage",
+        "explanation": "Perplexity is not a hardware metric."
+      },
+      {
+        "id": "C",
+        "text": "Higher likelihood assigned to observed tokens",
+        "explanation": "Perplexity summarizes predictive uncertainty on the evaluated text."
+      },
+      {
+        "id": "D",
+        "text": "Higher output diversity in every decoding configuration",
+        "explanation": "Decoding diversity depends on other settings."
+      }
+    ],
+    "correctAnswers": [
+      "C"
+    ],
+    "explanation": "Perplexity summarizes predictive uncertainty on the evaluated text."
+  },
+  {
+    "id": "GENL-P01-035",
+    "domain": "Experimentation",
+    "topic": "Human evaluation",
+    "question": "Which evaluation is most appropriate for assessing whether generated summaries preserve meaning and remain coherent?",
+    "difficulty": "fundamental",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "GPU temperature only",
+        "explanation": "This measures hardware state."
+      },
+      {
+        "id": "B",
+        "text": "Training epoch count",
+        "explanation": "This is a training configuration."
+      },
+      {
+        "id": "C",
+        "text": "Exact character count alone",
+        "explanation": "Length does not establish quality."
+      },
+      {
+        "id": "D",
+        "text": "Human review using a predefined rubric",
+        "explanation": "Reviewers can judge semantic fidelity and coherence."
+      }
+    ],
+    "correctAnswers": [
+      "D"
+    ],
+    "explanation": "Reviewers can judge semantic fidelity and coherence."
+  },
+  {
+    "id": "GENL-P01-036",
+    "domain": "Experimentation",
+    "topic": "RLHF",
+    "question": "What is the purpose of collecting human preference comparisons between candidate model responses?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Construct GPU execution kernels",
+        "explanation": "Preferences are not hardware instructions."
+      },
+      {
+        "id": "B",
+        "text": "Provide preference supervision for alignment",
+        "explanation": "Preferences can train reward models or support preference optimization."
+      },
+      {
+        "id": "C",
+        "text": "Replace tokenization",
+        "explanation": "Tokenization remains necessary."
+      },
+      {
+        "id": "D",
+        "text": "Guarantee elimination of all bias",
+        "explanation": "Human preferences may themselves contain bias."
+      }
+    ],
+    "correctAnswers": [
+      "B"
+    ],
+    "explanation": "Preferences can train reward models or support preference optimization."
+  },
+  {
+    "id": "GENL-P01-037",
+    "domain": "Experimentation",
+    "topic": "Quantization evaluation",
+    "question": "A team converts an LLM to a lower-precision representation. Which evaluation is needed before deployment? Select TWO answers.",
+    "difficulty": "advanced",
+    "type": "multiple",
+    "options": [
+      {
+        "id": "A",
+        "text": "Compare quality, latency and memory under representative workloads",
+        "explanation": "Quantization can change both quality and resource use."
+      },
+      {
+        "id": "B",
+        "text": "Check file size only",
+        "explanation": "Size alone does not establish quality or speed."
+      },
+      {
+        "id": "C",
+        "text": "Assume accuracy is identical",
+        "explanation": "Reduced precision may affect outputs."
+      },
+      {
+        "id": "D",
+        "text": "Use the same prompts and decoding settings when comparing quality",
+        "explanation": "Controlled comparisons isolate precision effects."
+      },
+      {
+        "id": "E",
+        "text": "Compare different tasks for each precision",
+        "explanation": "Different workloads confound comparison."
+      }
+    ],
+    "correctAnswers": [
+      "A",
+      "D"
+    ],
+    "explanation": "Quantization can change both quality and resource use. Controlled comparisons isolate precision effects."
+  },
+  {
+    "id": "GENL-P01-038",
+    "domain": "Experimentation",
+    "topic": "Reproducibility",
+    "question": "Which practice most directly improves reproducibility of model-comparison experiments?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Keep only the best score",
+        "explanation": "This loses experimental context."
+      },
+      {
+        "id": "B",
+        "text": "Record dataset versions, configuration, seeds and model checkpoints",
+        "explanation": "These preserve key experimental conditions."
+      },
+      {
+        "id": "C",
+        "text": "Overwrite all previous checkpoints",
+        "explanation": "This removes comparison artifacts."
+      },
+      {
+        "id": "D",
+        "text": "Change random seeds without recording them",
+        "explanation": "This prevents tracing variability."
+      }
+    ],
+    "correctAnswers": [
+      "B"
+    ],
+    "explanation": "These preserve key experimental conditions."
+  },
+  {
+    "id": "GENL-P01-039",
+    "domain": "Data Analysis and Visualization",
+    "topic": "Central tendency",
+    "question": "A response-latency dataset contains a few extremely slow requests. Which statistic is less sensitive to these extremes than the mean?",
+    "difficulty": "fundamental",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Arithmetic mean",
+        "explanation": "Extreme values can shift it substantially."
+      },
+      {
+        "id": "B",
+        "text": "Maximum",
+        "explanation": "It is directly determined by the largest value."
+      },
+      {
+        "id": "C",
+        "text": "Range",
+        "explanation": "It depends on extremes."
+      },
+      {
+        "id": "D",
+        "text": "Median",
+        "explanation": "The middle ranked value is robust to extreme observations."
+      }
+    ],
+    "correctAnswers": [
+      "D"
+    ],
+    "explanation": "The middle ranked value is robust to extreme observations."
+  },
+  {
+    "id": "GENL-P01-040",
+    "domain": "Data Analysis and Visualization",
+    "topic": "Visualization",
+    "question": "Which plot is best suited to examining the relationship between prompt length and response latency?",
+    "difficulty": "fundamental",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Single summary table of means",
+        "explanation": "It hides individual relationships."
+      },
+      {
+        "id": "B",
+        "text": "Pie chart",
+        "explanation": "It displays parts of a whole."
+      },
+      {
+        "id": "C",
+        "text": "Scatter plot",
+        "explanation": "It displays paired numerical observations."
+      },
+      {
+        "id": "D",
+        "text": "Single histogram of prompt lengths",
+        "explanation": "It does not show paired latency values."
+      }
+    ],
+    "correctAnswers": [
+      "C"
+    ],
+    "explanation": "It displays paired numerical observations."
+  },
+  {
+    "id": "GENL-P01-041",
+    "domain": "Data Analysis and Visualization",
+    "topic": "Missing values",
+    "question": "A numerical feature has missing values. To avoid leaking validation information, how should median imputation be performed?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Use validation labels to choose replacements",
+        "explanation": "This leaks target information."
+      },
+      {
+        "id": "B",
+        "text": "Fit the median on all data before splitting",
+        "explanation": "This uses validation information."
+      },
+      {
+        "id": "C",
+        "text": "Fit the median on training data and apply it to validation data",
+        "explanation": "Preprocessing statistics must be learned without validation leakage."
+      },
+      {
+        "id": "D",
+        "text": "Replace missing values with test set statistics",
+        "explanation": "This compromises test independence."
+      }
+    ],
+    "correctAnswers": [
+      "C"
+    ],
+    "explanation": "Preprocessing statistics must be learned without validation leakage."
+  },
+  {
+    "id": "GENL-P01-042",
+    "domain": "Data Analysis and Visualization",
+    "topic": "Classification metrics",
+    "question": "Only 1% of messages contain prohibited content. A classifier predicts every message as safe. Why is 99% accuracy misleading?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "The dataset is necessarily corrupted",
+        "explanation": "Imbalance alone does not imply corruption."
+      },
+      {
+        "id": "B",
+        "text": "Accuracy cannot be calculated for classification",
+        "explanation": "Accuracy is a classification metric."
+      },
+      {
+        "id": "C",
+        "text": "The model must have perfect recall",
+        "explanation": "It misses all positive examples."
+      },
+      {
+        "id": "D",
+        "text": "It hides failure to detect the minority class",
+        "explanation": "Recall for prohibited messages is zero."
+      }
+    ],
+    "correctAnswers": [
+      "D"
+    ],
+    "explanation": "Recall for prohibited messages is zero."
+  },
+  {
+    "id": "GENL-P01-043",
+    "domain": "Data Analysis and Visualization",
+    "topic": "Percentiles",
+    "question": "What does a p95 request latency of 800 ms mean under the usual empirical percentile interpretation?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Exactly 95 requests were measured",
+        "explanation": "A percentile is not a sample count."
+      },
+      {
+        "id": "B",
+        "text": "Approximately 95% of requests complete within 800 ms",
+        "explanation": "The percentile describes the upper boundary for most observations."
+      },
+      {
+        "id": "C",
+        "text": "The mean equals 800 ms",
+        "explanation": "Mean and percentile are different."
+      },
+      {
+        "id": "D",
+        "text": "Every request completes in 800 ms",
+        "explanation": "The percentile does not describe each request."
+      }
+    ],
+    "correctAnswers": [
+      "B"
+    ],
+    "explanation": "The percentile describes the upper boundary for most observations."
+  },
+  {
+    "id": "GENL-P01-044",
+    "domain": "Data Analysis and Visualization",
+    "topic": "Precision",
+    "question": "A detector flags 100 responses, of which 80 truly violate policy. What is its precision?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "0.20",
+        "explanation": "This is the false discovery proportion here."
+      },
+      {
+        "id": "B",
+        "text": "0.80",
+        "explanation": "Precision is true positives divided by predicted positives."
+      },
+      {
+        "id": "C",
+        "text": "Recall cannot be computed, so precision cannot either",
+        "explanation": "Precision is computable from the provided counts."
+      },
+      {
+        "id": "D",
+        "text": "1.25",
+        "explanation": "This reverses the ratio."
+      }
+    ],
+    "correctAnswers": [
+      "B"
+    ],
+    "explanation": "Precision is true positives divided by predicted positives."
+  },
+  {
+    "id": "GENL-P01-045",
+    "domain": "Data Analysis and Visualization",
+    "topic": "Correlation",
+    "question": "An analysis finds a positive correlation between prompt length and latency. Which conclusion is justified?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "The relationship must hold in every deployment",
+        "explanation": "Generalization requires additional evidence."
+      },
+      {
+        "id": "B",
+        "text": "Longer prompts tend to be associated with higher latency in this sample",
+        "explanation": "Correlation describes association, not proof of causation."
+      },
+      {
+        "id": "C",
+        "text": "Latency must cause prompts to become longer",
+        "explanation": "Direction of causality is not established."
+      },
+      {
+        "id": "D",
+        "text": "Prompt length is the sole cause of latency",
+        "explanation": "Other factors may contribute."
+      }
+    ],
+    "correctAnswers": [
+      "B"
+    ],
+    "explanation": "Correlation describes association, not proof of causation."
+  },
+  {
+    "id": "GENL-P01-046",
+    "domain": "Trustworthy AI",
+    "topic": "Privacy",
+    "question": "A company plans to use customer support transcripts for fine-tuning. Which preparation is most appropriate?",
+    "difficulty": "fundamental",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Publish raw transcripts for reproducibility",
+        "explanation": "This may expose personal information."
+      },
+      {
+        "id": "B",
+        "text": "Retain all sensitive data by default",
+        "explanation": "Unnecessary retention increases exposure."
+      },
+      {
+        "id": "C",
+        "text": "Assume public access equals consent",
+        "explanation": "Accessibility does not establish permission."
+      },
+      {
+        "id": "D",
+        "text": "Check lawful authorization and minimize or redact unnecessary personal data",
+        "explanation": "This reduces privacy risk and respects data-use requirements."
+      }
+    ],
+    "correctAnswers": [
+      "D"
+    ],
+    "explanation": "This reduces privacy risk and respects data-use requirements."
+  },
+  {
+    "id": "GENL-P01-047",
+    "domain": "Trustworthy AI",
+    "topic": "Fairness",
+    "question": "A hiring-assistance model performs substantially worse for one demographic group. What should the team do first?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Report only aggregate accuracy",
+        "explanation": "Aggregate metrics can hide disparities."
+      },
+      {
+        "id": "B",
+        "text": "Increase temperature without evaluation",
+        "explanation": "This does not directly diagnose bias."
+      },
+      {
+        "id": "C",
+        "text": "Investigate subgroup errors and data representation",
+        "explanation": "Disaggregated evaluation helps identify sources of disparity."
+      },
+      {
+        "id": "D",
+        "text": "Remove all records from that group",
+        "explanation": "This may worsen representation and fairness."
+      }
+    ],
+    "correctAnswers": [
+      "C"
+    ],
+    "explanation": "Disaggregated evaluation helps identify sources of disparity."
+  },
+  {
+    "id": "GENL-P01-048",
+    "domain": "Trustworthy AI",
+    "topic": "Prompt injection",
+    "question": "A retrieved document tells the assistant to ignore its instructions and disclose secrets. What is the best design response? Select TWO answers.",
+    "difficulty": "advanced",
+    "type": "multiple",
+    "options": [
+      {
+        "id": "A",
+        "text": "Always execute instructions found in retrieved text",
+        "explanation": "Retrieved content is not trusted authority."
+      },
+      {
+        "id": "B",
+        "text": "Assume trusted embedding similarity guarantees safe content",
+        "explanation": "Relevance does not imply safety."
+      },
+      {
+        "id": "C",
+        "text": "Treat retrieved content as untrusted data and enforce access controls outside the model",
+        "explanation": "Trust boundaries and authorization limit the impact of injected instructions."
+      },
+      {
+        "id": "D",
+        "text": "Restrict tool permissions to authorized operations",
+        "explanation": "Least privilege limits the impact of malicious instructions."
+      },
+      {
+        "id": "E",
+        "text": "Increase the context window only",
+        "explanation": "More context does not enforce authorization."
+      }
+    ],
+    "correctAnswers": [
+      "C",
+      "D"
+    ],
+    "explanation": "Trust boundaries and authorization limit the impact of injected instructions. Least privilege limits the impact of malicious instructions."
+  },
+  {
+    "id": "GENL-P01-049",
+    "domain": "Trustworthy AI",
+    "topic": "Hallucinations",
+    "question": "Which practice helps users verify factual claims produced by a RAG assistant?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Increase randomness to maximize factuality",
+        "explanation": "Randomness does not ensure factual accuracy."
+      },
+      {
+        "id": "B",
+        "text": "Provide source references and abstain when supporting evidence is insufficient",
+        "explanation": "Traceable evidence and uncertainty improve verifiability."
+      },
+      {
+        "id": "C",
+        "text": "Always answer confidently",
+        "explanation": "Confidence does not establish correctness."
+      },
+      {
+        "id": "D",
+        "text": "Hide all retrieved sources",
+        "explanation": "This reduces transparency."
+      }
+    ],
+    "correctAnswers": [
+      "B"
+    ],
+    "explanation": "Traceable evidence and uncertainty improve verifiability."
+  },
+  {
+    "id": "GENL-P01-050",
+    "domain": "Trustworthy AI",
+    "topic": "Guardrails",
+    "question": "What is the appropriate role of guardrails in an LLM application?",
+    "difficulty": "intermediate",
+    "type": "single",
+    "options": [
+      {
+        "id": "A",
+        "text": "Eliminate the need to monitor failures",
+        "explanation": "Monitoring remains necessary."
+      },
+      {
+        "id": "B",
+        "text": "Guarantee every response is safe",
+        "explanation": "No guardrail guarantees perfect safety."
+      },
+      {
+        "id": "C",
+        "text": "Replace backend authorization",
+        "explanation": "Authorization must be enforced independently."
+      },
+      {
+        "id": "D",
+        "text": "Apply defined input/output policies as one layer of a broader safety system",
+        "explanation": "Guardrails reduce risk but need evaluation and complementary controls."
+      }
+    ],
+    "correctAnswers": [
+      "D"
+    ],
+    "explanation": "Guardrails reduce risk but need evaluation and complementary controls."
+  }
+]

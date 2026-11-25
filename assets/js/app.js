@@ -984,6 +984,18 @@
         };
 
         function parseMockQuestions(mode = 'exam50_en') {
+            if (mode === 'practice01') {
+                return PRACTICE_01_DATA.map((item, idx) => ({
+                    num: idx + 1,
+                    title: `Question ${idx + 1} (${item.topic} · ${item.difficulty})`,
+                    domain: item.domain,
+                    prompt: item.question,
+                    options: item.options.map(opt => ({ letter: opt.id, text: opt.text })),
+                    answer: [...item.correctAnswers].sort().join(','),
+                    multiple: item.type === 'multiple',
+                    explanation: `<strong>Correct Answer: ${item.correctAnswers.join(', ')}</strong><br/>${item.explanation}<br/>${item.options.map(opt => `<strong>${opt.id}.</strong> ${opt.explanation}`).join('<br/>')}`
+                }));
+            }
             if ((mode === 'exam50_en' || mode === 'exam50_vi' || mode === 'set50') && EXAM_50_BILINGUAL.length > 0) {
                 const isEn = (mode === 'exam50_en');
                 return EXAM_50_BILINGUAL.map(item => {
@@ -1657,7 +1669,11 @@
         };
 
         function isStrictExamMode(mode) {
-            return mode === 'exam50_en' || mode === 'exam50_vi';
+            return mode === 'exam50_en' || mode === 'exam50_vi' || mode === 'practice01';
+        }
+
+        function isEnglishQuizMode() {
+            return quizState.mode === 'exam50_en' || quizState.mode === 'practice01';
         }
 
         function formatTimer(sec) {
@@ -1688,7 +1704,7 @@
                 }, 1000);
             }
             const btn = document.getElementById('quizTimerBtn');
-            const isEn = quizState.mode === 'exam50_en';
+            const isEn = isEnglishQuizMode();
             if (btn) btn.textContent = quizState.timerRunning ? (isEn ? '⏸️ Pause Timer' : '⏸️ Tạm dừng') : (isEn ? '▶️ Start 60m Timer' : '▶️ Bắt đầu giờ');
         };
 
@@ -1712,7 +1728,7 @@
             quizState.flagged[qIdx] = !quizState.flagged[qIdx];
             const navBtn = document.getElementById(`qnav-${qIdx}`);
             const flagBtn = document.getElementById(`qflag-${qIdx}`);
-            const isEn = quizState.mode === 'exam50_en';
+            const isEn = isEnglishQuizMode();
             if (navBtn) {
                 navBtn.classList.toggle('flagged', !!quizState.flagged[qIdx]);
             }
@@ -1746,12 +1762,13 @@
             document.getElementById('sidebarRight').style.display = 'none';
             const questions = parseMockQuestions(quizState.mode);
             const strictMode = isStrictExamMode(quizState.mode);
-            const isEn = quizState.mode === 'exam50_en';
+            const isEn = isEnglishQuizMode();
             const revealAnswers = !strictMode || quizState.submitted;
 
             const total = questions.length;
             const answeredCount = Object.keys(quizState.answered).length;
             const modeTitles = {
+                practice01: '📗 Practice Exam 01 (50 Questions • 60 Minutes • English)',
                 exam50_en: '🇬🇧 Official English Timed Mock Exam (50 Questions • 60 Minutes • Submit to Reveal Score)',
                 exam50_vi: '🇻🇳 Thi Thử Định Giờ Tiếng Việt (50 Câu • 60 Phút • Chỉ Hiện Đáp Án Khi Nộp Bài)',
                 set50: '📘 Luyện Đề 50 Câu Chuẩn Blueprint (Hiện Đáp Án & Giải Thích Ngay)',
@@ -1790,10 +1807,10 @@
                         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:14px;">
                             <div>
                                 <span class="brand-badge">${passed ? '✅ PASSED (ĐẠT CHUẨN >= 70%)' : '⚠️ NEEDS REVIEW (CẦN ÔN TẬP THÊM < 70%)'}</span>
-                                <h3 style="font-size:1.35rem; margin-top:6px;">📊 ${isEn ? 'Official Mock Exam Score Report' : 'Báo Cáo Kết Quả Bài Thi Thử 50 Câu'}</h3>
+                                <h3 style="font-size:1.35rem; margin-top:6px;">📊 ${isEn ? 'Mock Exam Score Report' : 'Báo Cáo Kết Quả Bài Thi Thử 50 Câu'}</h3>
                                 <p style="color:var(--text-secondary); font-size:0.88rem;">
                                     ${isEn
-                                        ? `Answered: <strong>${answeredCount}/${total}</strong> • Time Elapsed: <strong>${formatTimer(timeUsedSec)}</strong> • Answer Key Distribution: <code>A:12 | B:12 | C:13 | D:13</code>`
+                                        ? `Answered: <strong>${answeredCount}/${total}</strong> • Time Elapsed: <strong>${formatTimer(timeUsedSec)}</strong> • ${quizState.mode === 'practice01' ? 'Multiple-answer questions require an exact match (no partial credit).' : 'Answer Key Distribution: <code>A:12 | B:12 | C:13 | D:13</code>'}`
                                         : `Đã trả lời: <strong>${answeredCount}/${total}</strong> câu • Thời gian làm bài: <strong>${formatTimer(timeUsedSec)}</strong> • Phân bố đáp án chuẩn: <code>A:12 | B:12 | C:13 | D:13</code>`}
                                 </p>
                             </div>
@@ -1845,7 +1862,7 @@
             container.innerHTML = `
                 <div class="module-hero">
                     <div>
-                        <span class="brand-badge">INTERACTIVE MOCK EXAM • 5 OFFICIAL DOMAINS • BALANCED ANSWER KEY (A:12 / B:12 / C:13 / D:13)</span>
+                        <span class="brand-badge">${quizState.mode === 'practice01' ? 'INDEPENDENT PRACTICE MATERIAL • NOT OFFICIAL NVIDIA EXAM QUESTIONS' : 'INTERACTIVE MOCK EXAM • 5 OFFICIAL DOMAINS • BALANCED ANSWER KEY (A:12 / B:12 / C:13 / D:13)'}</span>
                         <h2 style="font-size:1.38rem; font-weight:800; margin-top:6px;">🎯 ${modeTitle}</h2>
                         <p style="color:var(--text-secondary); margin-top:4px; font-size:0.9rem;">
                             ${strictMode
@@ -1855,12 +1872,14 @@
                                 : 'Chế độ Luyện Tập Phản Xạ: Chọn đáp án A/B/C/D để xem ngay lập tức phân tích chi tiết tại sao đáp án đó đúng và tại sao các phương án nhiễu sai.'}
                         </p>
                         <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+                            <button class="complete-btn ${quizState.mode === 'practice01' ? 'completed' : ''}" onclick="switchQuizMode('practice01')">📗 Practice Exam 01 (50Q • 60m • EN)</button>
                             <button class="complete-btn ${quizState.mode === 'exam50_en' ? 'completed' : ''}" onclick="switchQuizMode('exam50_en')">🇬🇧 English Timed Exam (50Q • 60m)</button>
                             <button class="complete-btn ${quizState.mode === 'exam50_vi' ? 'completed' : ''}" onclick="switchQuizMode('exam50_vi')">🇻🇳 Thi Thử 60 Phút TV (Nộp bài mới hiện điểm)</button>
                             <button class="complete-btn ${quizState.mode === 'set50' ? 'completed' : ''}" onclick="switchQuizMode('set50')">📘 Luyện 50 Câu (Hiện giải thích ngay)</button>
                             <button class="complete-btn ${quizState.mode === 'set30' ? 'completed' : ''}" onclick="switchQuizMode('set30')">⚡ Bộ 30 Câu Luyện Nhanh</button>
                             <button class="complete-btn ${quizState.mode === 'all80' ? 'completed' : ''}" onclick="switchQuizMode('all80')">🔥 Tất Cả 80 Câu</button>
                         </div>
+                        ${quizState.mode === 'practice01' ? '<p style="color:var(--text-secondary); margin-top:10px;">46 single-answer questions and 4 multiple-answer questions. For multiple-answer questions, select all correct options; no partial credit. <a href="nca-genl-practice-01.md" download>Download Markdown</a> · <a href="nca-genl-practice-01.json" download>Download JSON</a></p>' : ''}
                     </div>
                     <div class="quiz-hero-controls">
                         <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
@@ -1909,16 +1928,16 @@
                                         let cls = '';
                                         if (revealAnswers) {
                                             if (chosen) {
-                                                if (opt.letter === q.answer) cls = 'correct';
-                                                else if (opt.letter === chosen && chosen !== q.answer) cls = 'wrong';
-                                            } else if (strictMode && quizState.submitted && opt.letter === q.answer) {
+                                                if (q.answer.split(',').includes(opt.letter)) cls = 'correct';
+                                                else if (chosen.split(',').includes(opt.letter)) cls = 'wrong';
+                                            } else if (strictMode && quizState.submitted && q.answer.split(',').includes(opt.letter)) {
                                                 cls = 'correct';
                                             }
-                                        } else if (chosen === opt.letter) {
+                                        } else if (chosen && chosen.split(',').includes(opt.letter)) {
                                             cls = 'selected';
                                         }
                                         return `
-                                            <button class="quiz-option ${cls}" data-letter="${opt.letter}" onclick="answerQuizQuestion(${qIdx}, '${opt.letter}', '${q.answer}')">
+                                            <button class="quiz-option ${cls}" data-letter="${opt.letter}" aria-pressed="${!!chosen && chosen.split(',').includes(opt.letter)}" onclick="answerQuizQuestion(${qIdx}, '${opt.letter}', '${q.answer}')">
                                                 <strong style="color:var(--nv-green-light); min-width:24px;">${opt.letter}.</strong>
                                                 <span>${marked.parseInline(opt.text)}</span>
                                             </button>
@@ -1936,7 +1955,7 @@
                 ${strictMode && !quizState.submitted ? `
                     <div style="display:flex; justify-content:center; margin-top:24px; margin-bottom:32px;">
                         <button class="complete-btn completed" style="padding:12px 28px; font-size:1rem;" onclick="submitStrictExam()">
-                            📤 ${isEn ? 'Submit All 50 Answers & View Official Breakdown' : 'Nộp Bài Thi 50 Câu & Xem Điểm Theo 5 Miền Kiến Thức'}
+                            📤 ${isEn ? 'Submit All 50 Answers & View Score Breakdown' : 'Nộp Bài Thi 50 Câu & Xem Điểm Theo 5 Miền Kiến Thức'}
                         </button>
                     </div>
                 ` : ''}
@@ -1953,18 +1972,29 @@
                 if (!quizState.timerRunning && Object.keys(quizState.answered).length === 0) {
                     toggleQuizTimer();
                 }
-                quizState.answered[qIdx] = selectedLetter;
+                const question = parseMockQuestions(quizState.mode)[qIdx];
+                let selected = selectedLetter;
+                if (question.multiple) {
+                    const letters = new Set((quizState.answered[qIdx] || '').split(',').filter(Boolean));
+                    if (letters.has(selectedLetter)) letters.delete(selectedLetter);
+                    else letters.add(selectedLetter);
+                    selected = [...letters].sort().join(',');
+                }
+                if (selected) quizState.answered[qIdx] = selected;
+                else delete quizState.answered[qIdx];
                 const card = document.getElementById(`qcard-${qIdx}`);
                 if (card) {
                     card.querySelectorAll('.quiz-option').forEach(btn => {
-                        btn.classList.toggle('selected', btn.getAttribute('data-letter') === selectedLetter);
+                        const active = selected.split(',').includes(btn.getAttribute('data-letter'));
+                        btn.classList.toggle('selected', active);
+                        btn.setAttribute('aria-pressed', String(active));
                     });
                 }
                 const navBtn = document.getElementById(`qnav-${qIdx}`);
-                if (navBtn) navBtn.classList.add('done');
+                if (navBtn) navBtn.classList.toggle('done', !!selected);
                 const answeredCount = Object.keys(quizState.answered).length;
                 const scoreEl = document.getElementById('quizScoreText');
-                if (scoreEl) scoreEl.textContent = `${answeredCount} / 50`;
+                if (scoreEl) scoreEl.textContent = `${answeredCount} / ${parseMockQuestions(quizState.mode).length}`;
                 return;
             }
 
