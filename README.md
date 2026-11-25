@@ -10,6 +10,30 @@ Phù hợp với lập trình viên và người học AI muốn hiểu khái ni
 2. Làm câu hỏi trong [Cẩm nang ôn thi](./NCA_GENL_Exam_Guide_and_Tips.md), ghi lại lỗi sai và đọc lại phần chưa hiểu.
 3. Mở [index.html](./index.html) bằng trình duyệt để học và thi thử tương tác. Cần Internet để tải thư viện và font hiển thị.
 
+Khi sao chép hoặc chia sẻ trang học, giữ `index.html` cùng thư mục `assets/` để tải được giao diện và dữ liệu.
+
+### Bảo trì trang học
+
+- `index.html`: khung HTML và liên kết thư viện.
+- `assets/css/styles.css`: giao diện, theme và responsive.
+- `assets/js/docs-data.js`: nội dung Markdown và metadata tài liệu trong `DOCS_DATA`.
+- `assets/js/quiz-data.js`: flashcard và ngân hàng 50 câu hỏi song ngữ.
+- `assets/js/app.js`: render tài liệu, sơ đồ tư duy, điều hướng, tìm kiếm, tiến độ và thi thử.
+
+Sau khi sửa Markdown, chạy script từ thư mục repository để đồng bộ nội dung vào trang học; script giữ nguyên metadata và thứ tự tài liệu:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/sync-docs.ps1
+```
+
+Kiểm tra đồng bộ mà không ghi file:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/sync-docs.ps1 -Check
+```
+
+Trang vẫn mở trực tiếp bằng trình duyệt, không cần build hoặc máy chủ web.
+
 ## Tài liệu
 
 | Module | Nội dung chính |

@@ -9,7 +9,7 @@ Tài liệu tiếng Việt ôn **NVIDIA Certified Associate – Generative AI an
 - `README.md`: tổng quan, danh mục module và nguồn tham khảo.
 - `Module_01_*.md`–`Module_11_*.md`: nội dung học; `NCA_GENL_Exam_Guide_and_Tips.md`: hướng dẫn thi và bài tập.
 - `NCA_GENL_REPOSITORY_REVIEW.md`: lịch sử rà soát; kiểm tra hiện trạng trước khi áp dụng đề xuất cũ.
-- `index.html`: trang tĩnh, nhúng tài liệu trong `DOCS_DATA`. Không giả định có build script hoặc bộ kiểm thử.
+- `index.html`: khung trang tĩnh; CSS ở `assets/css/styles.css`, dữ liệu tài liệu trong `DOCS_DATA` ở `assets/js/docs-data.js`, flashcard/câu hỏi ở `assets/js/quiz-data.js`, logic ở `assets/js/app.js`. Không cần build hoặc máy chủ web.
 
 ## Cách làm việc
 
@@ -29,7 +29,7 @@ Tài liệu tiếng Việt ôn **NVIDIA Certified Associate – Generative AI an
 
 ## Đồng bộ trang học tập
 
-- Markdown là nguồn nội dung. Khi sửa tài liệu có trong `DOCS_DATA`, đồng bộ mục tương ứng trong `index.html`, trừ khi người dùng yêu cầu chỉ sửa nguồn.
+- Markdown là nguồn nội dung. Khi sửa tài liệu có trong `DOCS_DATA`, chạy `powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/sync-docs.ps1` để đồng bộ `assets/js/docs-data.js`, trừ khi người dùng yêu cầu chỉ sửa nguồn. Dùng thêm `-Check` để kiểm tra mà không ghi file.
 - Kiểm tra cấu trúc thực tế, serialize chuỗi đúng cách; giữ metadata và nội dung không liên quan, không thay toàn trang để sửa một đoạn.
 - Khi sửa trang, giữ điều hướng, tìm kiếm, theme, render Markdown/Mermaid/KaTeX/code và tiến độ trong `localStorage`; kiểm tra CDN khi có lỗi hiển thị.
 
